@@ -10,7 +10,6 @@ const ADMIN_SECTIONS = [
   { title: 'Schedule', subtitle: 'Create & manage schedules', screen: 'AdminSchedule', color: '#FF9800' },
   { title: 'Incidents', subtitle: 'View & manage all incidents', screen: 'AdminIncidents', color: '#f44336' },
   { title: 'Shift Reports', subtitle: 'View end-of-shift reports', screen: 'AdminShiftReports', color: '#9C27B0' },
-  { title: 'Live Tracking', subtitle: 'Track guards in real-time', screen: 'AdminTracking', color: '#00BCD4' },
   { title: 'Shift History', subtitle: 'View all guard shifts', screen: 'AdminShiftHistory', color: '#607D8B' },
 ];
 
