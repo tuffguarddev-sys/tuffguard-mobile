@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API = 'http://192.168.0.172:3000/api';
+const API = 'https://tuffguardsecurityms.com/api';
 
 const AdminSchedule = ({ navigation }) => {
   const [schedules, setSchedules] = useState([]);

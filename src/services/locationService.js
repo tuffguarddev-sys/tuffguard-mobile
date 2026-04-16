@@ -52,7 +52,7 @@ export const getAddressFromCoordinates = async (latitude, longitude) => {
   try {
     const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
     if (addresses && addresses.length > 0) {
-      const address = addresses;
+      const address = addresses[0];
       return `${address.street || ''}, ${address.city || ''}, ${address.region || ''} ${address.postalCode || ''}`.trim();
     }
     return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
@@ -83,6 +83,22 @@ let watchSubscription = null;
 let trackingIntervalId = null;
 let currentShiftId = null;
 let isTracking = false;
+
+export const resumeTrackingIfNeeded = async () => {
+  try {
+    const data = await AsyncStorage.getItem('locationTracking');
+    if (!data) return false;
+    const { isTracking, shiftId } = JSON.parse(data);
+    if (isTracking && shiftId && !isTracking) {
+      console.log('📍 Resuming location tracking for shift:', shiftId);
+      await startLocationTracking(shiftId);
+      return true;
+    }
+  } catch (err) {
+    console.error('Error resuming tracking:', err);
+  }
+  return false;
+};
 
 export const startLocationTracking = async (shiftId) => {
   if (isTracking) {

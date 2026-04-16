@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
 
-const API = 'http://192.168.0.172:3000/api';
+const API = 'https://tuffguardsecurityms.com/api';
 
 const AdminSites = () => {
   const [sites, setSites] = useState([]);

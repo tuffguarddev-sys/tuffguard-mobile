@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API = 'http://192.168.0.172:3000/api';
+const API = 'https://tuffguardsecurityms.com/api';
 
 const roleColor = { DEV: '#9C27B0', BOSS: '#f44336', MANAGER: '#FF9800', EMPLOYEE: '#4CAF50', CLIENT: '#2196F3' };
 

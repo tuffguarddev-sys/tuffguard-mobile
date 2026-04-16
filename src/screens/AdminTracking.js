@@ -7,7 +7,7 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://192.168.0.172:3000';
+const SOCKET_URL = 'https://tuffguardsecurityms.com';
 
 const AdminTracking = () => {
   const [guards, setGuards] = useState([]);

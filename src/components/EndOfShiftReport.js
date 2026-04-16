@@ -23,7 +23,7 @@ const EndOfShiftReport = ({ visible, onClose, onSubmit, shiftData }) => {
  useEffect(() => {
  if (visible && shiftData?.id) {
  AsyncStorage.getItem('token').then(token => {
- fetch('http://192.168.0.172:3000/api/checkins/shift/' + shiftData.id, {
+ fetch('https://tuffguardsecurityms.com/api/checkins/shift/' + shiftData.id, {
  headers: { Authorization: 'Bearer ' + token }
  }).then(r => r.json()).then(d => setCheckIns(d.data || [])).catch(() => {});
  });
@@ -89,7 +89,7 @@ const EndOfShiftReport = ({ visible, onClose, onSubmit, shiftData }) => {
  clockIn: shiftData?.clockInTime || shiftData?.startTime,
  clockOut: new Date().toISOString(),
  };
- const response = await fetch('http://192.168.0.172:3000/api/shift-reports', {
+ const response = await fetch('https://tuffguardsecurityms.com/api/shift-reports', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
  body: JSON.stringify(report),

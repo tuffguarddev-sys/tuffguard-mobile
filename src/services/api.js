@@ -12,7 +12,7 @@ export const clearAllStorage = async () => {
 };
 
 // Backend API URL
-const API_BASE_URL = 'http://192.168.0.172:3000/api';
+const API_BASE_URL = 'https://tuffguardsecurityms.com/api';
 
 // Helper function to get auth token
 const getAuthToken = async () => {
@@ -26,7 +26,7 @@ const getAuthToken = async () => {
 };
 
 // Helper function to make API requests
-const apiRequest = async (endpoint, method = 'GET', body = null) => {
+export const apiRequest = async (endpoint, method = 'GET', body = null) => {
   try {
     const token = await getAuthToken();
     console.log(

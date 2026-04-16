@@ -36,10 +36,10 @@ class SocketService {
       }
 
 
-      console.log('🌐 Connecting to http://192.168.0.172:3000...');
-      this.socket = io('http://192.168.0.172:3000', {
+      console.log('🌐 Connecting to https://tuffguardsecurityms.com...');
+      this.socket = io('https://tuffguardsecurityms.com', {
         auth: { token },
-        transports: ['polling', 'websocket'],
+        transports: ['websocket'],
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionAttempts: 5,

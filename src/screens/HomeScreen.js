@@ -8,6 +8,8 @@ const HomeScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [clockedIn, setClockedIn] = useState(false);
+  const [shiftSite, setShiftSite] = useState('');
 
   const loadUnreadCount = useCallback(async () => {
     try {
@@ -15,6 +17,25 @@ const HomeScreen = ({ navigation }) => {
       setUnreadMessages(count || 0);
     } catch (error) {
       console.error('Error loading unread count:', error);
+    }
+  }, []);
+
+  const checkClockStatus = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch('https://tuffguardsecurityms.com/api/shifts/active', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const data = await response.json();
+      if (data.success && data.data) {
+        setClockedIn(true);
+        setShiftSite(data.data.site?.name || 'Unknown Site');
+      } else {
+        setClockedIn(false);
+        setShiftSite('');
+      }
+    } catch (err) {
+      console.error('Clock status check failed:', err);
     }
   }, []);
 
@@ -33,6 +54,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     loadUser();
     loadUnreadCount();
+    checkClockStatus();
     const interval = setInterval(loadUnreadCount, 60000); // Every 60 seconds
     return () => clearInterval(interval);
   }, [loadUser, loadUnreadCount]);
@@ -41,6 +63,7 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(true);
     await loadUser();
     await loadUnreadCount();
+    await checkClockStatus();
     setRefreshing(false);
   };
 
@@ -100,6 +123,24 @@ const HomeScreen = ({ navigation }) => {
       image: require('../../assets/images/map-scene.jpg'),
       screen: 'Sites',
     },
+    {
+      title: 'Time Off',
+      subtitle: 'Request time off',
+      image: require('../../assets/images/schedule-scene.jpg'),
+      screen: 'TimeOff',
+    },
+    {
+      title: 'Notifications',
+      subtitle: 'View your notifications',
+      image: require('../../assets/images/messages-scene.jpg'),
+      screen: 'Notifications',
+    },
+    {
+      title: 'My Profile',
+      subtitle: 'Account settings & password',
+      image: require('../../assets/images/shift-history-scene.jpg'),
+      screen: 'Profile',
+    },
   ];
 
   const managementItems = [];
@@ -129,6 +170,21 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Clock Status Banner */}
+      <TouchableOpacity
+        style={[styles.clockBanner, clockedIn ? styles.clockBannerIn : styles.clockBannerOut]}
+        onPress={() => navigation.navigate('ClockInOut')}
+      >
+        <Text style={styles.clockBannerText}>
+          {clockedIn ? '🟢 CLOCKED IN' : '🔴 CLOCKED OUT'}
+        </Text>
+        {clockedIn && shiftSite ? (
+          <Text style={styles.clockBannerSite}>{shiftSite} — Tap to manage</Text>
+        ) : (
+          <Text style={styles.clockBannerSite}>Tap to clock in</Text>
+        )}
+      </TouchableOpacity>
 
       {/* Menu Items */}
       <View style={styles.menuList}>
@@ -226,6 +282,11 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   arrow: { color: '#fff', fontSize: 28, fontWeight: '300' },
   footer: { padding: 20, alignItems: 'center' },
+  clockBanner: { marginHorizontal: 16, marginTop: 12, borderRadius: 10, padding: 14, alignItems: 'center' },
+  clockBannerIn: { backgroundColor: '#1a3a1a', borderWidth: 1, borderColor: '#4CAF50' },
+  clockBannerOut: { backgroundColor: '#3a1a1a', borderWidth: 1, borderColor: '#f44336' },
+  clockBannerText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  clockBannerSite: { color: '#999', fontSize: 12, marginTop: 3 },
   footerText: { color: '#444', fontSize: 12 },
 });
 

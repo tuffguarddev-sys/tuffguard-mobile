@@ -13,24 +13,14 @@ import {
  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { login, clearAllStorage } from '../services/api';
+import { login } from '../services/api';
 
  const LoginScreen = ({ navigation, onLogin }) => {
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [loading, setLoading] = useState(false);
 
- const handleClearStorage = async () => {
- try {
- await clearAllStorage();
- Alert.alert('Success', 'Storage cleared! Please login again with fresh credentials.');
- setEmail('');
- setPassword('');
- } catch (error) {
- Alert.alert('Error', 'Failed to clear storage');
- console.error('Clear storage error:', error);
- }
- };
+ 
 
  const handleLogin = async () => {
  if (!email || !password) {
@@ -64,12 +54,7 @@ import { login, clearAllStorage } from '../services/api';
  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
  keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
  
- {/* Debug Clear Storage Button - Top Left */}
- <TouchableOpacity
- style={styles.debugButton}
- onPress={handleClearStorage}>
- <Text style={styles.debugButtonText}></Text>
- </TouchableOpacity>
+
 
  <ScrollView 
  contentContainerStyle={styles.scrollContainer}
@@ -115,6 +100,7 @@ import { login, clearAllStorage } from '../services/api';
  <Text style={styles.loginButtonText}>Login</Text>
  )}
  </TouchableOpacity>
+ <Text style={styles.forgotText}>Forgot password? Contact your manager.</Text>
  </View>
  </ScrollView>
  </KeyboardAvoidingView>
@@ -126,28 +112,7 @@ const styles = StyleSheet.create({
  flex: 1,
  backgroundColor: '#000000',
  },
- debugButton: {
- position: 'absolute',
- top: 50,
- left: 20,
- width: 50,
- height: 50,
- borderRadius: 25,
- backgroundColor: '#ff5252',
- justifyContent: 'center',
- alignItems: 'center',
- zIndex: 1000,
- elevation: 5,
- shadowColor: '#000',
- shadowOffset: { width: 0, height: 2 },
- shadowOpacity: 0.3,
- shadowRadius: 3,
- borderWidth: 2,
- borderColor: '#ff1744',
- },
- debugButtonText: {
- fontSize: 24,
- },
+
  scrollContainer: {
  flexGrow: 1,
  justifyContent: 'center',
@@ -198,6 +163,12 @@ const styles = StyleSheet.create({
  color: '#fff',
  fontSize: 18,
  fontWeight: 'bold',
+ },
+ forgotText: {
+ color: '#999',
+ fontSize: 13,
+ textAlign: 'center',
+ marginTop: 15,
  },
 });
 

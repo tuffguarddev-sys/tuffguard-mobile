@@ -20,11 +20,36 @@ const ClockInOut = ({ navigation }) => {
  const [sites, setSites] = useState([]);
  const [sitesLoading, setSitesLoading] = useState(false);
  const [pendingLocation, setPendingLocation] = useState(null);
+ const [currentDuration, setCurrentDuration] = useState('0h 0m');
 
  useEffect(() => {
  loadUser();
  checkClockStatus();
  }, []);
+
+ // Real-time duration timer
+ useEffect(() => {
+ if (!isClockedIn || !currentShift) return;
+ const timer = setInterval(() => {
+ const start = new Date(currentShift.clockInTime || currentShift.startTime);
+ const diff = new Date() - start;
+ const hours = Math.floor(diff / (1000 * 60 * 60));
+ const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+ const duration = hours + 'h ' + minutes + 'm';
+ setCurrentDuration(duration);
+ // Overtime warning after 8 hours
+ if (hours === 8 && minutes === 0) {
+ Alert.alert('Overtime Alert', 'You have been on shift for 8 hours.');
+ }
+ }, 60000);
+ // Set immediately
+ const start = new Date(currentShift.clockInTime || currentShift.startTime);
+ const diff = new Date() - start;
+ const hours = Math.floor(diff / (1000 * 60 * 60));
+ const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+ setCurrentDuration(hours + 'h ' + minutes + 'm');
+ return () => clearInterval(timer);
+ }, [isClockedIn, currentShift]);
 
  const loadUser = async () => {
  try {
@@ -37,13 +62,41 @@ const ClockInOut = ({ navigation }) => {
 
  const checkClockStatus = async () => {
  try {
+ const token = await AsyncStorage.getItem('token');
+ const response = await fetch('https://tuffguardsecurityms.com/api/shifts/active', {
+ headers: { Authorization: 'Bearer ' + token }
+ });
+ const data = await response.json();
+ if (data.success && data.data) {
+ // Active shift found on server
+ const serverShift = data.data;
+ const localShiftData = await AsyncStorage.getItem('activeShift');
+ const localShift = localShiftData ? JSON.parse(localShiftData) : {};
+ const activeShift = {
+ ...serverShift,
+ siteName: serverShift.site?.name || localShift.siteName || 'Unknown Site',
+ location: localShift.location || '',
+ coordinates: localShift.coordinates || null,
+ };
+ await AsyncStorage.setItem('activeShift', JSON.stringify(activeShift));
+ setIsClockedIn(true);
+ setCurrentShift(activeShift);
+ } else {
+ // No active shift on server - clear local storage
+ await AsyncStorage.removeItem('activeShift');
+ setIsClockedIn(false);
+ setCurrentShift(null);
+ }
+ } catch (error) {
+ console.error('Error checking clock status:', error);
+ // Fall back to local storage if API fails
+ try {
  const shiftData = await AsyncStorage.getItem('activeShift');
  if (shiftData) {
  setIsClockedIn(true);
  setCurrentShift(JSON.parse(shiftData));
  }
- } catch (error) {
- console.error('Error checking clock status:', error);
+ } catch {}
  } finally {
  setLoading(false);
  }
@@ -154,7 +207,7 @@ const ClockInOut = ({ navigation }) => {
  if (!report) {
  try {
  const token = await AsyncStorage.getItem('token');
- await fetch('http://192.168.0.172:3000/api/shift-reports/skipped', {
+ await fetch('https://tuffguardsecurityms.com/api/shift-reports/skipped', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
  body: JSON.stringify({ shiftId: currentShift?.id, siteId: currentShift?.siteId }),
@@ -270,7 +323,7 @@ const ClockInOut = ({ navigation }) => {
  {formatTime(currentShift.clockInTime || currentShift.startTime)}
  </Text>
  <Text style={styles.infoLabel}>Duration:</Text>
- <Text style={styles.infoValue}>{calculateCurrentDuration()}</Text>
+ <Text style={styles.infoValue}>{currentDuration}{parseInt(currentDuration) >= 8 ? ' ⚠️ OT' : ''}</Text>
  {currentShift.location && (
  <>
  <Text style={styles.infoLabel}>Location:</Text>

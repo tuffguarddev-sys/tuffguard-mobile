@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import socketService from './services/socketService';
+import { checkForUpdate } from './services/updateService';
 
 // Import screens - FIXED: Added ./src/ prefix to all imports
 import LoginScreen from './src/screens/LoginScreen';
@@ -26,6 +27,17 @@ import ConversationScreen from './src/screens/ConversationScreen';
 import NewMessageScreen from './src/screens/NewMessageScreen';
 import ShiftReportsScreen from './src/screens/ShiftReportsScreen';
 import SitesScreen from './src/screens/SitesScreen';
+import AdminScreen from './src/screens/AdminScreen';
+import CheckInScreen from './src/screens/CheckInScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
+import TimeOffScreen from './src/screens/TimeOffScreen';
+import AdminUsers from './src/screens/AdminUsers';
+import AdminSites from './src/screens/AdminSites';
+import AdminSchedule from './src/screens/AdminSchedule';
+import AdminIncidents from './src/screens/AdminIncidents';
+import AdminShiftReports from './src/screens/AdminShiftReports';
+import AdminShiftHistory from './src/screens/AdminShiftHistory';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +48,7 @@ const App = () => {
 
   useEffect(() => {
     checkLoginStatus();
+    checkForUpdate();
   }, []);
 
   useEffect(() => {
@@ -234,6 +247,61 @@ const App = () => {
             }
           }}
         />
+        <Stack.Screen 
+          name="Admin" 
+          component={AdminScreen}
+          options={{ 
+            title: 'Admin Panel',
+            headerTitleStyle: {
+              color: '#000000',
+              fontWeight: 'bold',
+            }
+          }}
+        />
+        <Stack.Screen 
+          name="CheckIn" 
+          component={CheckInScreen}
+          options={{ 
+            title: 'Check In',
+            headerTitleStyle: {
+              color: '#000000',
+              fontWeight: 'bold',
+            }
+          }}
+        />
+        <Stack.Screen 
+          name="Profile" 
+          component={ProfileScreen}
+          options={{ 
+            title: 'My Profile',
+            headerTitleStyle: {
+              color: '#000000',
+              fontWeight: 'bold',
+            }
+          }}
+        />
+        <Stack.Screen 
+          name="Notifications" 
+          component={NotificationsScreen}
+          options={{ 
+            title: 'Notifications',
+            headerTitleStyle: {
+              color: '#000000',
+              fontWeight: 'bold',
+            }
+          }}
+        />
+        <Stack.Screen 
+          name="TimeOff" 
+          component={TimeOffScreen}
+          options={{ title: 'Time Off Requests', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }}
+        />
+        <Stack.Screen name="AdminUsers" component={AdminUsers} options={{ title: 'Manage Users', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="AdminSites" component={AdminSites} options={{ title: 'Manage Sites', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="AdminSchedule" component={AdminSchedule} options={{ title: 'Schedules', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="AdminIncidents" component={AdminIncidents} options={{ title: 'All Incidents', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="AdminShiftReports" component={AdminShiftReports} options={{ title: 'Shift Reports', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="AdminShiftHistory" component={AdminShiftHistory} options={{ title: 'Shift History', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

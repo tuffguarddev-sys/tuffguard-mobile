@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API = 'http://192.168.0.172:3000/api';
+const API = 'https://tuffguardsecurityms.com/api';
 const sevColor = { low: '#4CAF50', medium: '#FF9800', high: '#f44336', critical: '#9C27B0' };
 const statColor = { open: '#f44336', investigating: '#FF9800', resolved: '#4CAF50', closed: '#555' };
 

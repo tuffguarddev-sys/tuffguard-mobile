@@ -2,7 +2,7 @@
   "expo": {
     "name": "TuffGuardMS",
     "slug": "SecurityAppTest",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tuffguard.security"
+      "bundleIdentifier": "com.tuffguard.security",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
