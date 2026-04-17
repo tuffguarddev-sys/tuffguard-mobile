@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal } from 'react-native';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  TextInput, Alert, ActivityIndicator, Modal, ScrollView,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colors } from '../theme/colors';
 
 const API = 'https://tuffguardsecurityms.com/api';
+
+const statusConfig = {
+  pending:  { color: colors.warning, bg: colors.warningBg, icon: '⏳', label: 'PENDING' },
+  approved: { color: colors.primary, bg: colors.primaryBg, icon: '✅', label: 'APPROVED' },
+  denied:   { color: colors.danger,  bg: colors.dangerBg,  icon: '❌', label: 'DENIED' },
+};
 
 const TimeOffScreen = () => {
   const [requests, setRequests] = useState([]);
@@ -12,11 +22,14 @@ const TimeOffScreen = () => {
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [cancelling, setCancelling] = useState(null);
+
+  useEffect(() => { load(); }, []);
 
   const load = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await fetch(API + '/time-off', { headers: { Authorization: 'Bearer ' + token } });
+      const res = await fetch(`${API}/time-off`, { headers: { Authorization: 'Bearer ' + token } });
       const data = await res.json();
       setRequests(data.data || []);
     } catch (err) {
@@ -30,19 +43,25 @@ const TimeOffScreen = () => {
     if (!startDate || !endDate) return Alert.alert('Error', 'Please enter start and end dates');
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-      return Alert.alert('Error', 'Date format must be YYYY-MM-DD');
+      return Alert.alert('Error', 'Date format must be YYYY-MM-DD\nExample: 2026-04-20');
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      return Alert.alert('Error', 'Start date must be before end date');
+    }
+    if (new Date(startDate) < new Date()) {
+      return Alert.alert('Error', 'Start date cannot be in the past');
     }
     setSubmitting(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await fetch(API + '/time-off', {
+      const res = await fetch(`${API}/time-off`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ startDate, endDate, reason })
       });
       const data = await res.json();
       if (res.ok) {
-        Alert.alert('Success', 'Time off request submitted');
+        Alert.alert('✅ Request Submitted', 'Your time off request has been submitted for approval.');
         setShowModal(false); setStartDate(''); setEndDate(''); setReason('');
         load();
       } else {
@@ -55,46 +74,162 @@ const TimeOffScreen = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const handleCancel = (item) => {
+    Alert.alert('Cancel Request', 'Are you sure you want to cancel this time off request?', [
+      { text: 'No', style: 'cancel' },
+      { text: 'Yes, Cancel', style: 'destructive', onPress: async () => {
+        setCancelling(item.id);
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const res = await fetch(`${API}/time-off/${item.id}`, {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + token }
+          });
+          if (res.ok) { load(); }
+          else Alert.alert('Error', 'Failed to cancel request');
+        } catch {
+          Alert.alert('Error', 'Failed to cancel request');
+        } finally {
+          setCancelling(null);
+        }
+      }}
+    ]);
+  };
 
-  const statusColor = { pending: '#FF9800', approved: '#4CAF50', denied: '#f44336' };
+  const getDays = (start, end) => {
+    const diff = new Date(end) - new Date(start);
+    return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+  };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#4CAF50" /></View>;
+  const pending = requests.filter(r => r.status === 'pending').length;
+  const approved = requests.filter(r => r.status === 'approved').length;
+
+  if (loading) return (
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
-        <Text style={styles.addBtnText}>+ Request Time Off</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Time Off</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNum}>{pending}</Text>
+            <Text style={styles.statLabel}>Pending</Text>
+          </View>
+          <View style={[styles.statBox, { borderColor: colors.primary }]}>
+            <Text style={[styles.statNum, { color: colors.primary }]}>{approved}</Text>
+            <Text style={styles.statLabel}>Approved</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statNum}>{requests.length}</Text>
+            <Text style={styles.statLabel}>Total</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Request Button */}
+      <TouchableOpacity style={styles.requestBtn} onPress={() => setShowModal(true)}>
+        <Text style={styles.requestBtnIcon}>📅</Text>
+        <Text style={styles.requestBtnText}>Request Time Off</Text>
       </TouchableOpacity>
 
+      {/* Requests List */}
       <FlatList
         data={requests}
         keyExtractor={item => item.id}
-        ListEmptyComponent={<Text style={styles.empty}>No time off requests</Text>}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <View style={styles.itemHeader}>
-              <Text style={styles.dates}>{item.startDate} → {item.endDate}</Text>
-              <Text style={[styles.status, { color: statusColor[item.status] || '#999' }]}>{item.status?.toUpperCase()}</Text>
-            </View>
-            {item.reason && <Text style={styles.reason}>{item.reason}</Text>}
-            {item.adminNote && <Text style={styles.adminNote}>Admin: {item.adminNote}</Text>}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🏖️</Text>
+            <Text style={styles.emptyTitle}>No requests yet</Text>
+            <Text style={styles.emptyText}>Submit a time off request and it will appear here</Text>
           </View>
-        )}
+        }
+        renderItem={({ item }) => {
+          const stat = statusConfig[item.status] || statusConfig.pending;
+          const days = getDays(item.startDate, item.endDate);
+          return (
+            <View style={[styles.card, { borderLeftColor: stat.color }]}>
+              <View style={styles.cardTop}>
+                <View style={[styles.statusPill, { backgroundColor: stat.bg, borderColor: stat.color }]}>
+                  <Text style={styles.statusIcon}>{stat.icon}</Text>
+                  <Text style={[styles.statusText, { color: stat.color }]}>{stat.label}</Text>
+                </View>
+                <Text style={styles.daysCount}>{days} day{days !== 1 ? 's' : ''}</Text>
+              </View>
+              <Text style={styles.dateRange}>
+                {new Date(item.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — {new Date(item.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
+              {item.reason ? <Text style={styles.reason}>📝 {item.reason}</Text> : null}
+              {item.adminNote ? (
+                <View style={styles.adminNoteBox}>
+                  <Text style={styles.adminNoteLabel}>Manager Note</Text>
+                  <Text style={styles.adminNoteText}>{item.adminNote}</Text>
+                </View>
+              ) : null}
+              {item.status === 'pending' && (
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => handleCancel(item)}
+                  disabled={cancelling === item.id}>
+                  {cancelling === item.id
+                    ? <ActivityIndicator size="small" color={colors.danger} />
+                    : <Text style={styles.cancelBtnText}>Cancel Request</Text>}
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        }}
       />
 
+      {/* Request Modal */}
       <Modal visible={showModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
+            <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Request Time Off</Text>
-            <TextInput style={styles.input} placeholder="Start Date (YYYY-MM-DD)" placeholderTextColor="#999" value={startDate} onChangeText={setStartDate} />
-            <TextInput style={styles.input} placeholder="End Date (YYYY-MM-DD)" placeholderTextColor="#999" value={endDate} onChangeText={setEndDate} />
-            <TextInput style={[styles.input, styles.textArea]} placeholder="Reason (optional)" placeholderTextColor="#999" value={reason} onChangeText={setReason} multiline numberOfLines={3} />
+            <Text style={styles.modalSubtitle}>Submit a request for your manager to review</Text>
+
+            <Text style={styles.inputLabel}>Start Date</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textMuted}
+              value={startDate}
+              onChangeText={setStartDate}
+            />
+            <Text style={styles.inputLabel}>End Date</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textMuted}
+              value={endDate}
+              onChangeText={setEndDate}
+            />
+            {startDate && endDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate) && /^\d{4}-\d{2}-\d{2}$/.test(endDate) && (
+              <Text style={styles.dayPreview}>
+                📅 {getDays(startDate, endDate)} day{getDays(startDate, endDate) !== 1 ? 's' : ''} requested
+              </Text>
+            )}
+            <Text style={styles.inputLabel}>Reason (Optional)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="E.g., Family vacation, medical appointment..."
+              placeholderTextColor={colors.textMuted}
+              value={reason}
+              onChangeText={setReason}
+              multiline
+              numberOfLines={3}
+            />
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={submitting}>
               {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>Submit Request</Text>}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => { setShowModal(false); setStartDate(''); setEndDate(''); setReason(''); }}>
+              <Text style={styles.closeBtnText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -104,26 +239,53 @@ const TimeOffScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
-  addBtn: { margin: 16, backgroundColor: '#4CAF50', padding: 14, borderRadius: 10, alignItems: 'center' },
-  addBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  empty: { color: '#999', textAlign: 'center', marginTop: 50, fontSize: 16 },
-  item: { backgroundColor: '#1a1a1a', margin: 8, marginHorizontal: 16, borderRadius: 10, padding: 16, borderWidth: 1, borderColor: '#333' },
-  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dates: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
-  status: { fontSize: 13, fontWeight: 'bold' },
-  reason: { color: '#999', fontSize: 13, marginTop: 8 },
-  adminNote: { color: '#4CAF50', fontSize: 13, marginTop: 6, fontStyle: 'italic' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
-  modalContainer: { backgroundColor: '#1a1a1a', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, borderWidth: 1, borderColor: '#333' },
-  modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
-  input: { height: 50, borderWidth: 1, borderColor: '#444', backgroundColor: '#2a2a2a', borderRadius: 8, paddingHorizontal: 15, marginBottom: 12, fontSize: 16, color: '#fff' },
-  textArea: { height: 80, paddingTop: 12 },
-  submitBtn: { backgroundColor: '#4CAF50', height: 50, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  cancelBtn: { backgroundColor: '#333', height: 50, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  cancelBtnText: { color: '#fff', fontSize: 16 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  listContent: { padding: 16 },
+
+  header: { backgroundColor: colors.bgHeader, padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12 },
+  headerTitle: { color: colors.textPrimary, fontSize: 24, fontWeight: '700' },
+  statsRow: { flexDirection: 'row', gap: 10 },
+  statBox: { backgroundColor: colors.bgCard, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  statNum: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
+  statLabel: { color: colors.textSecondary, fontSize: 11 },
+
+  requestBtn: { margin: 16, backgroundColor: colors.primary, borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  requestBtnIcon: { fontSize: 20 },
+  requestBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  card: { backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  statusIcon: { fontSize: 12 },
+  statusText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  daysCount: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  dateRange: { color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginBottom: 6 },
+  reason: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  adminNoteBox: { backgroundColor: colors.bgInput, borderRadius: 10, padding: 10, marginTop: 10 },
+  adminNoteLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600', marginBottom: 4 },
+  adminNoteText: { color: colors.primary, fontSize: 13 },
+  cancelBtn: { marginTop: 12, borderWidth: 1, borderColor: colors.danger, borderRadius: 10, padding: 10, alignItems: 'center' },
+  cancelBtnText: { color: colors.danger, fontSize: 13, fontWeight: '600' },
+
+  emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyIcon: { fontSize: 48, marginBottom: 16 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '600', marginBottom: 8 },
+  emptyText: { color: colors.textSecondary, fontSize: 14, textAlign: 'center' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' },
+  modalContainer: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.border },
+  modalHandle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  modalTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: '700', marginBottom: 4 },
+  modalSubtitle: { color: colors.textSecondary, fontSize: 14, marginBottom: 20 },
+  inputLabel: { color: colors.textSecondary, fontSize: 13, marginBottom: 6 },
+  input: { backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontSize: 16, marginBottom: 14 },
+  textArea: { height: 80, textAlignVertical: 'top', paddingTop: 12 },
+  dayPreview: { color: colors.primary, fontSize: 13, fontWeight: '600', marginBottom: 14, textAlign: 'center' },
+  submitBtn: { backgroundColor: colors.primary, padding: 16, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
+  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  closeBtn: { backgroundColor: colors.bgInput, padding: 14, borderRadius: 14, alignItems: 'center' },
+  closeBtnText: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
 });
 
 export default TimeOffScreen;

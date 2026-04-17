@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   RefreshControl, TextInput, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getMessagesFromAPI, getAllUsers, getUnreadCountAPI } from '../services/api';
+import { getMessagesFromAPI, getAllUsers } from '../services/api';
+import socketService from '../services/socketService';
+import { colors } from '../theme/colors';
 
 const MessagingScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
@@ -13,6 +15,8 @@ const MessagingScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const meRef = useRef(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -20,28 +24,25 @@ const MessagingScreen = ({ navigation }) => {
       const me = userData ? JSON.parse(userData) : null;
       if (!me) return;
       setCurrentUser(me);
+      meRef.current = me;
 
-      // Load all users and messages in parallel
       const [allUsers, msgData] = await Promise.all([
         getAllUsers(),
         getMessagesFromAPI(),
       ]);
 
-      // Filter out current user and clients
       const otherUsers = (allUsers || []).filter(u => u.id !== me.id && u.role !== 'CLIENT');
-
-      // Build conversation map from messages
       const msgs = msgData?.data || msgData || [];
       const convMap = {};
+
       msgs.forEach(msg => {
         const isMe = msg.senderId === me.id;
         const otherId = isMe ? msg.recipientId : msg.senderId;
-        if (!convMap[otherId]) {
-          convMap[otherId] = { lastMessage: '', timestamp: null, unread: 0 };
-        }
+        if (!convMap[otherId]) convMap[otherId] = { lastMessage: '', timestamp: null, unread: 0, isMe: false };
         if (!convMap[otherId].timestamp || new Date(msg.createdAt) > new Date(convMap[otherId].timestamp)) {
           convMap[otherId].lastMessage = msg.content || msg.body || '';
           convMap[otherId].timestamp = msg.createdAt;
+          convMap[otherId].isMe = isMe;
         }
         if (!msg.isRead && !isMe) convMap[otherId].unread++;
       });
@@ -58,12 +59,27 @@ const MessagingScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadData();
+
+    // Socket listeners for real-time updates
+    const socket = socketService.socket;
+    if (socket) {
+      socket.on('message:new', () => loadData());
+      socket.on('users:online', ({ userIds }) => setOnlineUsers(new Set(userIds)));
+      socket.on('user:online', ({ userId }) => setOnlineUsers(prev => new Set([...prev, userId])));
+      socket.on('user:offline', ({ userId }) => setOnlineUsers(prev => { const s = new Set(prev); s.delete(userId); return s; }));
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('message:new');
+        socket.off('users:online');
+        socket.off('user:online');
+        socket.off('user:offline');
+      }
+    };
   }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
-  };
+  const onRefresh = () => { setRefreshing(true); loadData(); };
 
   const formatTime = (ts) => {
     if (!ts) return '';
@@ -75,21 +91,12 @@ const MessagingScreen = ({ navigation }) => {
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
-  const getInitials = (user) => {
-    return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
-  };
+  const getInitials = (user) => `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'DEV': return '#9C27B0';
-      case 'BOSS': return '#f44336';
-      case 'MANAGER': return '#FF9800';
-      case 'CLIENT': return '#2196F3';
-      default: return '#4CAF50';
-    }
-  };
+  const getRoleColor = (role) => colors.roleColors[role] || colors.primary;
 
-  // Sort users: those with conversations first (by time), then alphabetically
+  const totalUnread = Object.values(conversations).reduce((sum, c) => sum + (c.unread || 0), 0);
+
   const sortedUsers = [...users]
     .filter(u => {
       const name = `${u.firstName} ${u.lastName}`.toLowerCase();
@@ -106,7 +113,8 @@ const MessagingScreen = ({ navigation }) => {
 
   const renderUser = ({ item }) => {
     const conv = conversations[item.id];
-    const hasConv = !!conv;
+    const isOnline = onlineUsers.has(item.id);
+    const roleColor = getRoleColor(item.role);
 
     return (
       <TouchableOpacity
@@ -116,72 +124,95 @@ const MessagingScreen = ({ navigation }) => {
           otherUserName: `${item.firstName} ${item.lastName}`,
           currentUser,
         })}
-      >
-        <View style={[styles.avatar, { backgroundColor: getRoleColor(item.role) }]}>
-          <Text style={styles.avatarText}>{getInitials(item)}</Text>
-          {conv?.unread > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{conv.unread}</Text>
-            </View>
-          )}
+        activeOpacity={0.7}>
+
+        {/* Avatar */}
+        <View style={styles.avatarContainer}>
+          <View style={[styles.avatar, { backgroundColor: roleColor }]}>
+            <Text style={styles.avatarText}>{getInitials(item)}</Text>
+          </View>
+          <View style={[styles.onlineDot, { backgroundColor: isOnline ? colors.primary : colors.textMuted }]} />
         </View>
+
+        {/* Content */}
         <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.name, conv?.unread > 0 && styles.bold]}>
+          <View style={styles.cardTop}>
+            <Text style={[styles.name, conv?.unread > 0 && styles.nameBold]}>
               {item.firstName} {item.lastName}
             </Text>
-            {conv?.timestamp && (
-              <Text style={styles.time}>{formatTime(conv.timestamp)}</Text>
-            )}
+            <Text style={styles.time}>{conv?.timestamp ? formatTime(conv.timestamp) : ''}</Text>
           </View>
-          <View style={styles.cardFooter}>
-            <Text style={styles.role}>{item.role}</Text>
-            {hasConv ? (
-              <Text style={[styles.preview, conv?.unread > 0 && styles.bold]} numberOfLines={1}>
-                {conv.lastMessage}
+          <View style={styles.cardBottom}>
+            <Text style={styles.roleTag}>{item.role}</Text>
+            {conv ? (
+              <Text style={[styles.preview, conv?.unread > 0 && styles.previewBold]} numberOfLines={1}>
+                {conv.isMe ? '↗ ' : ''}{conv.lastMessage}
               </Text>
             ) : (
-              <Text style={styles.noMessages}>Tap to start conversation</Text>
+              <Text style={styles.noConv}>Tap to message</Text>
             )}
           </View>
         </View>
+
+        {/* Unread Badge */}
+        {conv?.unread > 0 && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadText}>{conv.unread > 9 ? '9+' : conv.unread}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
   if (loading) return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#2196F3" />
-      <Text style={styles.loadingText}>Loading...</Text>
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" color={colors.blue} />
     </View>
   );
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <Text style={styles.headerSub}>{users.length} contacts</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Messages</Text>
+          {totalUnread > 0 && (
+            <View style={styles.totalUnreadBadge}>
+              <Text style={styles.totalUnreadText}>{totalUnread} unread</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.headerSub}>{users.length} contacts · {onlineUsers.size} online</Text>
       </View>
 
+      {/* Search */}
       <View style={styles.searchContainer}>
+        <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
           value={search}
           onChangeText={setSearch}
           placeholder="Search contacts..."
-          placeholderTextColor="#666"
+          placeholderTextColor={colors.textMuted}
         />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Text style={styles.clearSearch}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
         data={sortedUsers}
         keyExtractor={item => item.id}
         renderItem={renderUser}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} tintColor="#2196F3" />}
-        contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.blue]} tintColor={colors.blue} />}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>💬</Text>
             <Text style={styles.emptyTitle}>No contacts found</Text>
+            <Text style={styles.emptyText}>Try adjusting your search</Text>
           </View>
         }
       />
@@ -190,31 +221,48 @@ const MessagingScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
-  loadingText: { color: '#fff', marginTop: 12 },
-  header: { backgroundColor: '#1a1a1a', padding: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  headerSub: { color: '#666', fontSize: 13, marginTop: 2 },
-  searchContainer: { backgroundColor: '#111', padding: 10, borderBottomWidth: 1, borderBottomColor: '#333' },
-  searchInput: { backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#333', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, color: '#fff', fontSize: 14 },
-  card: { flexDirection: 'row', backgroundColor: '#1a1a1a', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#333', alignItems: 'center' },
-  cardUnread: { borderColor: '#2196F3' },
-  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative' },
-  avatarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#f44336', borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: '#000' },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  listContent: { padding: 16 },
+
+  header: { backgroundColor: colors.bgHeader, padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
+  headerTitle: { color: colors.textPrimary, fontSize: 24, fontWeight: '700' },
+  headerSub: { color: colors.textSecondary, fontSize: 13 },
+  totalUnreadBadge: { backgroundColor: colors.blue, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
+  totalUnreadText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgHeader, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
+  searchIcon: { fontSize: 16 },
+  searchInput: { flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, color: colors.textPrimary, fontSize: 15 },
+  clearSearch: { color: colors.textMuted, fontSize: 16, padding: 4 },
+
+  card: { flexDirection: 'row', backgroundColor: colors.bgCard, borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  cardUnread: { borderColor: colors.blue, backgroundColor: '#0D1525' },
+
+  avatarContainer: { position: 'relative', marginRight: 14 },
+  avatar: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  onlineDot: { position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.bgCard },
+
   cardContent: { flex: 1 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  name: { color: '#fff', fontSize: 15 },
-  bold: { fontWeight: 'bold' },
-  time: { color: '#666', fontSize: 12 },
-  cardFooter: { flexDirection: 'column' },
-  role: { color: '#555', fontSize: 11, marginBottom: 2 },
-  preview: { color: '#888', fontSize: 13 },
-  noMessages: { color: '#444', fontSize: 12, fontStyle: 'italic' },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
-  emptyTitle: { color: '#fff', fontSize: 16 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  name: { color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
+  nameBold: { fontWeight: '700' },
+  time: { color: colors.textMuted, fontSize: 12 },
+  cardBottom: { gap: 2 },
+  roleTag: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  preview: { color: colors.textSecondary, fontSize: 13 },
+  previewBold: { color: colors.textPrimary, fontWeight: '600' },
+  noConv: { color: colors.textMuted, fontSize: 12, fontStyle: 'italic' },
+
+  unreadBadge: { backgroundColor: colors.blue, borderRadius: 12, minWidth: 22, height: 22, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6, marginLeft: 8 },
+  unreadText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+
+  emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyIcon: { fontSize: 48, marginBottom: 16 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '600', marginBottom: 8 },
+  emptyText: { color: colors.textSecondary, fontSize: 14 },
 });
 
 export default MessagingScreen;

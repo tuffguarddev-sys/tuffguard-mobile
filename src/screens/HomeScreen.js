@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, RefreshControl, ImageBackground } from 'react-native';
+import {
+  View, Text, TouchableOpacity, StyleSheet, ScrollView,
+  Alert, RefreshControl, StatusBar,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { logout } from '../services/api';
-import { getUnreadCountAPI } from '../services/api';
+import { logout, getUnreadCountAPI } from '../services/api';
+import { colors } from '../theme/colors';
 
 const HomeScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [clockedIn, setClockedIn] = useState(false);
   const [shiftSite, setShiftSite] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const loadUnreadCount = useCallback(async () => {
-    try {
-      const count = await getUnreadCountAPI();
-      setUnreadMessages(count || 0);
-    } catch (error) {
-      console.error('Error loading unread count:', error);
-    }
+  // Live clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const checkClockStatus = useCallback(async () => {
@@ -34,260 +36,283 @@ const HomeScreen = ({ navigation }) => {
         setClockedIn(false);
         setShiftSite('');
       }
-    } catch (err) {
-      console.error('Clock status check failed:', err);
-    }
+    } catch {}
+  }, []);
+
+  const loadUnreadNotifs = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await fetch('https://tuffguardsecurityms.com/api/notifications', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const data = await res.json();
+      const unread = (data.data || []).filter(n => !n.isRead).length;
+      setUnreadNotifs(unread);
+    } catch {}
+  }, []);
+
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      const count = await getUnreadCountAPI();
+      setUnreadMessages(count || 0);
+    } catch {}
   }, []);
 
   const loadUser = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      }
-    } catch (error) {
-      console.error('Error loading user:', error);
-    }
+      if (userData) setUser(JSON.parse(userData));
+    } catch {}
   }, []);
 
   useEffect(() => {
     loadUser();
     loadUnreadCount();
+    loadUnreadNotifs();
     checkClockStatus();
-    const interval = setInterval(loadUnreadCount, 60000); // Every 60 seconds
+    const interval = setInterval(() => {
+      loadUnreadCount();
+      loadUnreadNotifs();
+      checkClockStatus();
+    }, 60000);
     return () => clearInterval(interval);
-  }, [loadUser, loadUnreadCount]);
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadUser();
-    await loadUnreadCount();
-    await checkClockStatus();
+    await Promise.all([loadUser(), loadUnreadCount(), loadUnreadNotifs(), checkClockStatus()]);
     setRefreshing(false);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Logout', style: 'destructive', onPress: async () => {
         try {
           await logout();
           navigation.replace('Login');
-        } catch (error) {
+        } catch {
           Alert.alert('Error', 'Failed to logout');
         }
       }},
     ]);
   };
 
-  const canAccessManagement = () => {
-    return user && ['DEV', 'BOSS', 'MANAGER', 'Management'].includes(user.role || user.category);
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
+
+  const isAdmin = user && ['DEV', 'BOSS', 'MANAGER'].includes(user.role);
 
   const menuItems = [
     {
       title: 'Clock In / Out',
-      subtitle: 'Track your work hours',
-      image: require('../../assets/images/clock-scene.jpg'),
+      subtitle: clockedIn ? `On duty at ${shiftSite}` : 'Tap to clock in',
+      icon: '⏱️',
       screen: 'ClockInOut',
+      color: clockedIn ? colors.primary : colors.danger,
+      bg: clockedIn ? colors.primaryBg : colors.dangerBg,
+      badge: null,
+    },
+    {
+      title: 'Check In',
+      subtitle: 'Record your patrol check-in',
+      icon: '✅',
+      screen: 'CheckIn',
+      color: colors.blue,
+      bg: colors.blueBg,
+      badge: null,
     },
     {
       title: 'Schedule',
       subtitle: 'View your upcoming shifts',
-      image: require('../../assets/images/schedule-scene.jpg'),
-      screen: 'Schedule',
+      icon: '🗓️',
+      screen: 'CalendarSchedule',
+      color: colors.warning,
+      bg: colors.warningBg,
+      badge: null,
     },
     {
       title: 'Shift History',
       subtitle: 'View your past shifts',
-      image: require('../../assets/images/shift-history-scene.jpg'),
+      icon: '📊',
       screen: 'ShiftHistory',
+      color: colors.blue,
+      bg: colors.blueBg,
+      badge: null,
     },
     {
       title: 'Incident Reports',
       subtitle: 'Report and view incidents',
-      image: require('../../assets/images/police-scene.jpg'),
+      icon: '🚨',
       screen: 'Incidents',
+      color: colors.danger,
+      bg: colors.dangerBg,
+      badge: null,
     },
     {
       title: 'Messages',
       subtitle: unreadMessages > 0 ? `${unreadMessages} unread message${unreadMessages !== 1 ? 's' : ''}` : 'Team communication',
-      image: require('../../assets/images/messages-scene.jpg'),
+      icon: '💬',
       screen: 'Messaging',
+      color: colors.blue,
+      bg: colors.blueBg,
       badge: unreadMessages,
     },
     {
       title: 'Sites',
       subtitle: 'Locations and directions',
-      image: require('../../assets/images/map-scene.jpg'),
+      icon: '🏢',
       screen: 'Sites',
+      color: colors.primary,
+      bg: colors.primaryBg,
+      badge: null,
     },
     {
       title: 'Time Off',
       subtitle: 'Request time off',
-      image: require('../../assets/images/schedule-scene.jpg'),
+      icon: '📅',
       screen: 'TimeOff',
+      color: colors.warning,
+      bg: colors.warningBg,
+      badge: null,
     },
     {
       title: 'Notifications',
-      subtitle: 'View your notifications',
-      image: require('../../assets/images/messages-scene.jpg'),
+      subtitle: unreadNotifs > 0 ? `${unreadNotifs} new notification${unreadNotifs !== 1 ? 's' : ''}` : 'Alerts and updates',
+      icon: '🔔',
       screen: 'Notifications',
+      color: colors.primary,
+      bg: colors.primaryBg,
+      badge: unreadNotifs,
     },
     {
       title: 'My Profile',
-      subtitle: 'Account settings & password',
-      image: require('../../assets/images/shift-history-scene.jpg'),
+      subtitle: 'Account settings',
+      icon: '👤',
       screen: 'Profile',
+      color: colors.textSecondary,
+      bg: colors.bgInput,
+      badge: null,
     },
   ];
 
-  const managementItems = [];
-
-  const adminItem = {
-    title: 'Admin Panel',
-    subtitle: 'Manage users, sites, reports & more',
-    image: require('../../assets/images/create-schedule-scene.jpg'),
-    screen: 'Admin',
-  };
-
-  const allItems = canAccessManagement() ? [...menuItems, ...managementItems, adminItem] : menuItems;
+  if (isAdmin) {
+    menuItems.push({
+      title: 'Admin Panel',
+      subtitle: 'Manage users, sites & reports',
+      icon: '⚙️',
+      screen: 'Admin',
+      color: colors.purple,
+      bg: '#1A0A2A',
+      badge: null,
+    });
+  }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4CAF50']} tintColor="#4CAF50" />}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.userName}>{user ? `${user.firstName} ${user.lastName}` : 'User'}</Text>
-          <Text style={styles.userRole}>{user?.role || 'Security Officer'}</Text>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.bgHeader} />
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
 
-      {/* Clock Status Banner */}
-      <TouchableOpacity
-        style={[styles.clockBanner, clockedIn ? styles.clockBannerIn : styles.clockBannerOut]}
-        onPress={() => navigation.navigate('ClockInOut')}
-      >
-        <Text style={styles.clockBannerText}>
-          {clockedIn ? '🟢 CLOCKED IN' : '🔴 CLOCKED OUT'}
-        </Text>
-        {clockedIn && shiftSite ? (
-          <Text style={styles.clockBannerSite}>{shiftSite} — Tap to manage</Text>
-        ) : (
-          <Text style={styles.clockBannerSite}>Tap to clock in</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Menu Items */}
-      <View style={styles.menuList}>
-        {allItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuCard}
-            onPress={() => navigation.navigate(item.screen)}
-            activeOpacity={0.85}
-          >
-            <ImageBackground
-              source={item.image}
-              style={styles.imageBackground}
-              imageStyle={styles.imageStyle}
-              resizeMode="cover"
-            >
-              <View style={styles.cardOverlay}>
-                <View style={styles.cardContent}>
-                  <View style={styles.textContainer}>
-                    <Text style={styles.menuTitle}>{item.title}</Text>
-                    <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-                  </View>
-                  {item.badge > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.badge > 99 ? '99+' : item.badge}</Text>
-                    </View>
-                  )}
-                  <Text style={styles.arrow}>›</Text>
-                </View>
-              </View>
-            </ImageBackground>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>{getGreeting()},</Text>
+            <Text style={styles.userName}>{user ? user.firstName : 'Officer'}</Text>
+            <Text style={styles.dateText}>
+              {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
-        ))}
-      </View>
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>TuffGuard Security</Text>
-      </View>
-    </ScrollView>
+        {/* Clock Status Banner */}
+        <TouchableOpacity
+          style={[styles.clockBanner, clockedIn ? styles.clockBannerIn : styles.clockBannerOut]}
+          onPress={() => navigation.navigate('ClockInOut')}>
+          <View style={styles.clockBannerLeft}>
+            <View style={[styles.clockDot, { backgroundColor: clockedIn ? colors.primary : colors.danger }]} />
+            <View>
+              <Text style={styles.clockBannerStatus}>
+                {clockedIn ? 'CLOCKED IN' : 'CLOCKED OUT'}
+              </Text>
+              <Text style={styles.clockBannerSite}>
+                {clockedIn ? `📍 ${shiftSite}` : 'Tap to clock in'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.clockBannerArrow}>›</Text>
+        </TouchableOpacity>
+
+        {/* Menu Grid */}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuCard}
+              onPress={() => navigation.navigate(item.screen)}
+              activeOpacity={0.7}>
+              <View style={[styles.menuIconBox, { backgroundColor: item.bg, borderColor: item.color }]}>
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+                {item.badge > 0 && (
+                  <View style={styles.menuBadge}>
+                    <Text style={styles.menuBadgeText}>{item.badge > 9 ? '9+' : item.badge}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.menuTitle}>{item.title}</Text>
+              <Text style={styles.menuSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>TuffGuard Security</Text>
+          <Text style={styles.footerVersion}>v1.0.1</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  header: {
-    backgroundColor: '#1a1a1a',
-    padding: 20,
-    paddingTop: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  welcomeText: { fontSize: 14, color: '#999' },
-  userName: { fontSize: 22, fontWeight: 'bold', color: '#fff', marginTop: 2 },
-  userRole: { fontSize: 13, color: '#4CAF50', marginTop: 2 },
-  logoutButton: { backgroundColor: '#f44336', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-  logoutButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  menuList: { padding: 16, gap: 12 },
-  menuCard: {
-    width: '100%',
-    height: 90,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  imageBackground: { width: '100%', height: '100%' },
-  imageStyle: { borderRadius: 12 },
-  cardOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  textContainer: { flex: 1 },
-  menuTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-  menuSubtitle: { fontSize: 13, color: '#bbb', marginTop: 2 },
-  badge: {
-    backgroundColor: '#f44336',
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    marginRight: 8,
-  },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  arrow: { color: '#fff', fontSize: 28, fontWeight: '300' },
+  container: { flex: 1, backgroundColor: colors.bg },
+
+  header: { backgroundColor: colors.bgHeader, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerLeft: { flex: 1 },
+  greeting: { color: colors.textSecondary, fontSize: 14 },
+  userName: { color: colors.textPrimary, fontSize: 26, fontWeight: '700', letterSpacing: -0.5 },
+  dateText: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  logoutBtn: { backgroundColor: colors.dangerBg, borderWidth: 1, borderColor: colors.danger, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  logoutText: { color: colors.danger, fontSize: 13, fontWeight: '700' },
+
+  clockBanner: { marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1 },
+  clockBannerIn: { backgroundColor: colors.primaryBg, borderColor: colors.primary },
+  clockBannerOut: { backgroundColor: colors.dangerBg, borderColor: colors.danger },
+  clockBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  clockDot: { width: 10, height: 10, borderRadius: 5 },
+  clockBannerStatus: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  clockBannerSite: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  clockBannerArrow: { color: colors.textMuted, fontSize: 28 },
+
+  menuContainer: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 10 },
+  menuCard: { width: '47%', backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border },
+  menuIconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 10, borderWidth: 1, position: 'relative' },
+  menuIcon: { fontSize: 22 },
+  menuBadge: { position: 'absolute', top: -6, right: -6, backgroundColor: colors.danger, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: colors.bgCard },
+  menuBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  menuTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  menuSubtitle: { color: colors.textSecondary, fontSize: 11 },
+
   footer: { padding: 20, alignItems: 'center' },
-  clockBanner: { marginHorizontal: 16, marginTop: 12, borderRadius: 10, padding: 14, alignItems: 'center' },
-  clockBannerIn: { backgroundColor: '#1a3a1a', borderWidth: 1, borderColor: '#4CAF50' },
-  clockBannerOut: { backgroundColor: '#3a1a1a', borderWidth: 1, borderColor: '#f44336' },
-  clockBannerText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  clockBannerSite: { color: '#999', fontSize: 12, marginTop: 3 },
-  footerText: { color: '#444', fontSize: 12 },
+  footerText: { color: colors.textMuted, fontSize: 12 },
+  footerVersion: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
 });
 
 export default HomeScreen;
