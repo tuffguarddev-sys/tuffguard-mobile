@@ -2,7 +2,7 @@
   "expo": {
     "name": "TuffGuardMS",
     "slug": "SecurityAppTest",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,7 +26,13 @@
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "pan",
-      "package": "com.tuffguard.security"
+      "package": "com.tuffguard.security",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "REQUEST_INSTALL_PACKAGES",
+        "INTERNET"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

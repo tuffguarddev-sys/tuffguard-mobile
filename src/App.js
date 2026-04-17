@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import socketService from './services/socketService';
-import { checkForUpdate } from './services/updateService';
+import { checkForUpdate, startPeriodicUpdateCheck, stopPeriodicUpdateCheck } from './services/updateService';
 
 // Import screens - FIXED: Added ./src/ prefix to all imports
 import LoginScreen from './src/screens/LoginScreen';
@@ -49,6 +49,8 @@ const App = () => {
   useEffect(() => {
     checkLoginStatus();
     checkForUpdate();
+    startPeriodicUpdateCheck();
+    return () => stopPeriodicUpdateCheck();
   }, []);
 
   useEffect(() => {
