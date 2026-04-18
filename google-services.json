@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926506028663",
+    "project_id": "tuffguard",
+    "storage_bucket": "tuffguard.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926506028663:android:a52dae3e064ec3ff888072",
+        "android_client_info": {
+          "package_name": "com.tuffguarddev.SecurityAppTest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSkwjIwba_HKmokRuEMOsNcgR43rQIehc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -10,6 +10,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import socketService from './services/socketService';
 import { checkForUpdate, startPeriodicUpdateCheck, stopPeriodicUpdateCheck } from './services/updateService';
+import { registerForPushNotifications, setupNotificationListeners } from './services/notificationService';
 
 // Import screens - FIXED: Added ./src/ prefix to all imports
 import LoginScreen from './src/screens/LoginScreen';
@@ -61,6 +62,8 @@ const App = () => {
     }).catch(err => {
       console.error('❌ Socket initialization failed:', err);
     });
+    // Register for push notifications
+    registerForPushNotifications();
   } else {
     console.log('🔌 Calling disconnect because isLoggedIn is false');
     socketService.disconnect();
