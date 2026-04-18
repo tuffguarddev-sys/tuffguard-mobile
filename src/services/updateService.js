@@ -94,8 +94,89 @@ const showUpdatePrompt = (versionInfo, isForce) => {
   }
 };
 
+const backgroundDownloadAndPrompt = async (versionInfo) => {
+  const { version, downloadUrl, releaseNotes, forceUpdate } = versionInfo;
+  try {
+    const fileUri = FileSystem.documentDirectory + 'tuffguard-update.apk';
+
+    // Delete old cached APK if exists
+    const fileInfo = await FileSystem.getInfoAsync(fileUri);
+    if (fileInfo.exists) {
+      await FileSystem.deleteAsync(fileUri, { idempotent: true });
+    }
+
+    console.log('Downloading update in background...');
+
+    // Download silently
+    const downloadResumable = FileSystem.createDownloadResumable(
+      downloadUrl,
+      fileUri,
+      {},
+      (progress) => {
+        const percent = Math.round((progress.totalBytesWritten / progress.totalBytesExpectedToWrite) * 100);
+        console.log('Download progress: ' + percent + '%');
+      }
+    );
+
+    await downloadResumable.downloadAsync();
+    console.log('Update downloaded, prompting install...');
+
+    // Now show install prompt
+    if (forceUpdate) {
+      Alert.alert(
+        '🔄 Update Required',
+        'A required update is ready to install. Tap Install to continue.',
+        [{ text: 'Install Now', onPress: () => launchInstaller(fileUri) }],
+        { cancelable: false }
+      );
+    } else {
+      Alert.alert(
+        '🔄 Update Ready',
+        'Version ' + version + ' has been downloaded and is ready to install.
+
+' + (releaseNotes || ''),
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Install Now', onPress: () => launchInstaller(fileUri) }
+        ]
+      );
+    }
+  } catch (err) {
+    console.error('Background download error:', err.message);
+    // Fall back to manual download
+    showUpdatePrompt(versionInfo, forceUpdate);
+  }
+};
+
+const launchInstaller = async (fileUri) => {
+  try {
+    if (Platform.OS === 'android') {
+      const contentUri = await FileSystem.getContentUriAsync(fileUri);
+      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: contentUri,
+        flags: 1,
+        type: 'application/vnd.android.package-archive',
+      });
+    }
+  } catch (err) {
+    console.error('Install error:', err.message);
+    Alert.alert('Install Failed', 'Please contact your manager for assistance.');
+  }
+};
+
 export const checkForUpdate = async (silent = false) => {
   try {
+    // Check user role - skip update check for CLIENT and ACCOUNTANT
+    const userData = await AsyncStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      const skipRoles = ['CLIENT', 'ACCOUNTANT'];
+      if (skipRoles.includes(user.role)) {
+        console.log('Update check skipped for role:', user.role);
+        return;
+      }
+    }
+
     const versionInfo = await fetchVersionInfo();
     if (!versionInfo) return;
 
@@ -105,7 +186,8 @@ export const checkForUpdate = async (silent = false) => {
       return;
     }
 
-    showUpdatePrompt(versionInfo, versionInfo.forceUpdate);
+    // Pre-download in background then show install prompt
+    await backgroundDownloadAndPrompt(versionInfo);
   } catch (err) {
     console.log('Update check error:', err.message);
   }
