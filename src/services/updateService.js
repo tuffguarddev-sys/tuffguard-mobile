@@ -2,7 +2,7 @@ import { Alert, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
 
-const CURRENT_VERSION_CODE = 6;
+const CURRENT_VERSION_CODE = 7;
 const VERSION_URL = 'https://tuffguardsecurityms.com/api/app/version';
 
 let updateCheckInterval = null;
