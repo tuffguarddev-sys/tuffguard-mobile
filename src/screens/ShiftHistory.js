@@ -3,12 +3,14 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   RefreshControl, ActivityIndicator, Modal, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const ShiftHistory = () => {
+  const insets = useSafeAreaInsets();
   const [shifts, setShifts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ const ShiftHistory = () => {
           keyExtractor={item => item.id}
           renderItem={renderShift}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         />
       )}
 

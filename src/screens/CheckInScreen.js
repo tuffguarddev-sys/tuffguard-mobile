@@ -3,12 +3,14 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   FlatList, Alert, ActivityIndicator, Modal, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const CheckInScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [checkIns, setCheckIns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -106,7 +108,7 @@ const CheckInScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} contentContainerStyle={{ padding: 16 }}>
 
         {/* Status Card */}
         {!activeShift ? (

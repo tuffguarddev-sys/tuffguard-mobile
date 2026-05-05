@@ -3,12 +3,14 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   Linking, Platform, ActivityIndicator, RefreshControl, TextInput,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const SitesScreen = () => {
+  const insets = useSafeAreaInsets();
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -185,7 +187,7 @@ const SitesScreen = () => {
         data={filtered}
         renderItem={renderSite}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.blue]} tintColor={colors.blue} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

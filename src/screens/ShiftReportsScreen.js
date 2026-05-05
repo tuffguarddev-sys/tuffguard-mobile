@@ -10,9 +10,11 @@ import {
  Modal,
  ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ShiftReportsScreen = () => {
+  const insets = useSafeAreaInsets();
  const [reports, setReports] = useState([]);
  const [refreshing, setRefreshing] = useState(false);
  const [loading, setLoading] = useState(true);
@@ -165,7 +167,7 @@ const ShiftReportsScreen = () => {
  </TouchableOpacity>
  </View>
 
- <ScrollView style={styles.modalContent}>
+ <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.modalContent}>
  {selectedReport && (
  <>
  <View style={styles.detailSection}>

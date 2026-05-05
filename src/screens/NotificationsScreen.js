@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import socketService from '../services/socketService';
 import { colors } from '../theme/colors';
@@ -21,6 +22,7 @@ const typeConfig = {
 };
 
 const NotificationsScreen = () => {
+  const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -148,7 +150,7 @@ const NotificationsScreen = () => {
         data={notifications}
         keyExtractor={item => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListHeaderComponent={
           todayNotifs.length > 0 ? (
             <Text style={styles.sectionTitle}>TODAY</Text>

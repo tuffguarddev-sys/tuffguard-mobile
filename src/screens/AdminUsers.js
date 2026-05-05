@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   TextInput, RefreshControl, ActivityIndicator, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = 'https://tuffguardsecurityms.com/api';
@@ -10,6 +11,7 @@ const API = 'https://tuffguardsecurityms.com/api';
 const roleColor = { DEV: '#9C27B0', BOSS: '#f44336', MANAGER: '#FF9800', EMPLOYEE: '#4CAF50', CLIENT: '#2196F3' };
 
 const AdminUsers = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

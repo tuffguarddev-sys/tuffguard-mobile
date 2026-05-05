@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   ActivityIndicator, FlatList,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io } from 'socket.io-client';
@@ -10,6 +11,7 @@ import { io } from 'socket.io-client';
 const SOCKET_URL = 'https://tuffguardsecurityms.com';
 
 const AdminTracking = () => {
+  const insets = useSafeAreaInsets();
   const [guards, setGuards] = useState([]);
   const [connected, setConnected] = useState(false);
   const [selectedGuard, setSelectedGuard] = useState(null);
@@ -72,7 +74,7 @@ const AdminTracking = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

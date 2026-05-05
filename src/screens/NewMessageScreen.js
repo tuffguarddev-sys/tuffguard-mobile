@@ -11,6 +11,7 @@ import {
  Modal,
  Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -51,6 +52,7 @@ const MESSAGE_TEMPLATES = [
 
 const NewMessageScreen = ({ route, navigation }) => {
  const { currentUser } = route.params;
+  const insets = useSafeAreaInsets();
  const [recipient, setRecipient] = useState('Select recipient...');
  const [message, setMessage] = useState('');
  const [sending, setSending] = useState(false);
@@ -262,7 +264,7 @@ const NewMessageScreen = ({ route, navigation }) => {
  };
 
  return (
- <ScrollView style={styles.container}>
+ <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
  <View style={styles.form}>
  <Text style={styles.label}>To: *</Text>
  <View style={styles.pickerContainer}>

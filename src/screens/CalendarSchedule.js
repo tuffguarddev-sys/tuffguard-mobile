@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, ActivityIndicator, Modal, TextInput, Platform, KeyboardAvoidingView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSchedules, apiRequest } from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -17,6 +18,7 @@ const formatLocalDate = (date) => {
 };
 
 const CalendarSchedule = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ const CalendarSchedule = ({ navigation }) => {
   const statusColor = { pending: '#FF9800', approved: '#4CAF50', denied: '#f44336' };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
       {/* Request Time Off Section */}
       <View style={styles.timeOffSection}>
         <View style={styles.timeOffHeader}>

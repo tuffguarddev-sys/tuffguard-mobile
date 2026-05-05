@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   RefreshControl, Alert, Modal, ScrollView, ActivityIndicator, Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
@@ -26,6 +27,7 @@ const SEVERITY_FILTERS = ['all', 'low', 'medium', 'high', 'critical'];
 const STATUS_FILTERS = ['all', 'open', 'in_progress', 'resolved', 'closed'];
 
 const IncidentScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [incidents, setIncidents] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ const IncidentScreen = ({ navigation }) => {
       </View>
 
       {/* Severity Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
         {SEVERITY_FILTERS.map(f => (
           <TouchableOpacity
             key={f}
@@ -160,7 +162,7 @@ const IncidentScreen = ({ navigation }) => {
         keyExtractor={item => item.id}
         renderItem={renderIncident}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🛡️</Text>

@@ -14,6 +14,12 @@ export const clearAllStorage = async () => {
 // Backend API URL
 const API_BASE_URL = 'https://tuffguardsecurityms.com/api';
 
+// Navigation reference for 401 redirects
+let navigationRef = null;
+export const setNavigationRef = (ref) => {
+  navigationRef = ref;
+};
+
 // Helper function to get auth token
 const getAuthToken = async () => {
   try {
@@ -69,6 +75,16 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('❌ API Error Response:', errorData);
+      if (response.status === 401) {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+        if (navigationRef && navigationRef.current) {
+          navigationRef.current.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+        }
+      }
       throw new Error(
         errorData.error || `HTTP error! status: ${response.status}`,
       );
@@ -227,6 +243,17 @@ export const getSites = async () => {
     return response.sites || response.data || [];
   } catch (error) {
     console.error('Error fetching sites:', error);
+    return [];
+  }
+};
+
+// Get today's schedule for logged in user
+export const getMySchedule = async () => {
+  try {
+    const response = await apiRequest('/shifts/my-schedule', 'GET');
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching my schedule:', error);
     return [];
   }
 };

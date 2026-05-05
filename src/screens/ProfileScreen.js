@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   Alert, ActivityIndicator, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
@@ -10,6 +11,7 @@ const API = 'https://tuffguardsecurityms.com/api';
 const APP_VERSION = '1.0.1';
 
 const ProfileScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState(null);
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -102,7 +104,7 @@ const ProfileScreen = ({ navigation }) => {
   const getInitials = (u) => u ? (u.firstName?.[0] || '') + (u.lastName?.[0] || '') : '??';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container} contentContainerStyle={{ padding: 16 }}>
 
       {/* Avatar + Name */}
       <View style={styles.profileCard}>

@@ -9,6 +9,7 @@ import {
  Alert,
  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -58,6 +59,7 @@ const DAYS_OF_WEEK = [
 ];
 
 const CreateRecurringSchedule = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
  const [site, setSite] = useState('Select a site...');
  const [startDate, setStartDate] = useState(new Date());
  const [endDate, setEndDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
@@ -256,7 +258,7 @@ const CreateRecurringSchedule = ({ navigation }) => {
  };
 
  return (
- <ScrollView style={styles.container}>
+ <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
  <View style={styles.form}>
  <Text style={styles.headerTitle}> Create Recurring Schedule</Text>
  <Text style={styles.subtitle}>

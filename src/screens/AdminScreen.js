@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ADMIN_SECTIONS = [
@@ -14,6 +15,7 @@ const ADMIN_SECTIONS = [
 ];
 
 const AdminScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ const AdminScreen = ({ navigation }) => {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Admin Panel</Text>
         <Text style={styles.headerSub}>Logged in as {user?.firstName} {user?.lastName} · {user?.role}</Text>

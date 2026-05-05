@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   TextInput, RefreshControl, ActivityIndicator, Modal, ScrollView, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = 'https://tuffguardsecurityms.com/api';
@@ -10,6 +11,7 @@ const sevColor = { low: '#4CAF50', medium: '#FF9800', high: '#f44336', critical:
 const statColor = { open: '#f44336', investigating: '#FF9800', resolved: '#4CAF50', closed: '#555' };
 
 const AdminIncidents = () => {
+  const insets = useSafeAreaInsets();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

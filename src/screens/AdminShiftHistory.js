@@ -3,11 +3,13 @@ import {
   View, Text, FlatList, StyleSheet, TextInput,
   RefreshControl, ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const AdminShiftHistory = () => {
+  const insets = useSafeAreaInsets();
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

@@ -11,6 +11,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 // Socket service
 import socketService from './src/services/socketService';
+import { setNavigationRef } from './src/services/api';
 
 // Import screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -37,8 +38,13 @@ import AdminShiftHistory from './src/screens/AdminShiftHistory';
 import AdminSites from './src/screens/AdminSites';
 import AdminSchedule from './src/screens/AdminSchedule';
 import AdminTracking from './src/screens/AdminTracking';
+import ProfileScreen from './src/screens/ProfileScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
+import TimeOffScreen from './src/screens/TimeOffScreen';
 
 const Stack = createStackNavigator();
+
+const navigationRef = React.createRef();
 
 const App = () => {
  const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -106,7 +112,7 @@ const App = () => {
  }
 
  return (
- <NavigationContainer>
+ <NavigationContainer ref={(ref) => { setNavigationRef({ current: ref }); }}>
  <StatusBar barStyle="light-content" backgroundColor="#888" />
  <Stack.Navigator
  initialRouteName={isLoggedIn ? 'Home' : 'Login'}
@@ -247,6 +253,9 @@ const App = () => {
         <Stack.Screen name="AdminSites" component={AdminSites} options={{ title: 'Sites', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminSchedule" component={AdminSchedule} options={{ title: 'Schedule', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminTracking" component={AdminTracking} options={{ title: 'Live Tracking', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'My Profile', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="TimeOff" component={TimeOffScreen} options={{ title: 'Time Off Requests', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
  </Stack.Navigator>
  </NavigationContainer>
  );

@@ -3,11 +3,13 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Alert, RefreshControl, StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logout, getUnreadCountAPI } from '../services/api';
 import { colors } from '../theme/colors';
 
 const HomeScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -16,7 +18,6 @@ const HomeScreen = ({ navigation }) => {
   const [shiftSite, setShiftSite] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Live clock
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
@@ -109,15 +110,6 @@ const HomeScreen = ({ navigation }) => {
 
   const menuItems = [
     {
-      title: 'Clock In / Out',
-      subtitle: clockedIn ? `On duty at ${shiftSite}` : 'Tap to clock in',
-      icon: '⏱️',
-      screen: 'ClockInOut',
-      color: clockedIn ? colors.primary : colors.danger,
-      bg: clockedIn ? colors.primaryBg : colors.dangerBg,
-      badge: null,
-    },
-    {
       title: 'Check In',
       subtitle: 'Record your patrol check-in',
       icon: '✅',
@@ -155,7 +147,7 @@ const HomeScreen = ({ navigation }) => {
     },
     {
       title: 'Messages',
-      subtitle: unreadMessages > 0 ? `${unreadMessages} unread message${unreadMessages !== 1 ? 's' : ''}` : 'Team communication',
+      subtitle: unreadMessages > 0 ? unreadMessages + ' unread message' + (unreadMessages !== 1 ? 's' : '') : 'Team communication',
       icon: '💬',
       screen: 'Messaging',
       color: colors.blue,
@@ -181,15 +173,6 @@ const HomeScreen = ({ navigation }) => {
       badge: null,
     },
     {
-      title: 'Notifications',
-      subtitle: unreadNotifs > 0 ? `${unreadNotifs} new notification${unreadNotifs !== 1 ? 's' : ''}` : 'Alerts and updates',
-      icon: '🔔',
-      screen: 'Notifications',
-      color: colors.primary,
-      bg: colors.primaryBg,
-      badge: unreadNotifs,
-    },
-    {
       title: 'My Profile',
       subtitle: 'Account settings',
       icon: '👤',
@@ -213,11 +196,10 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bgHeader} />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
-
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -227,8 +209,14 @@ const HomeScreen = ({ navigation }) => {
               {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </Text>
           </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Logout</Text>
+          {/* Notification Bell */}
+          <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
+            <Text style={styles.bellIcon}>🔔</Text>
+            {unreadNotifs > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadNotifs > 9 ? '9+' : unreadNotifs}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -243,7 +231,7 @@ const HomeScreen = ({ navigation }) => {
                 {clockedIn ? 'CLOCKED IN' : 'CLOCKED OUT'}
               </Text>
               <Text style={styles.clockBannerSite}>
-                {clockedIn ? `📍 ${shiftSite}` : 'Tap to clock in'}
+                {clockedIn ? '📍 ' + shiftSite : 'Tap to clock in'}
               </Text>
             </View>
           </View>
@@ -272,9 +260,13 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
 
+        {/* Footer with Logout */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>TuffGuard Security</Text>
-          <Text style={styles.footerVersion}>v1.0.1</Text>
+          <Text style={styles.footerVersion}>v1.0.6</Text>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -282,16 +274,17 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.bgHeader },
   container: { flex: 1, backgroundColor: colors.bg },
-
   header: { backgroundColor: colors.bgHeader, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: colors.border },
   headerLeft: { flex: 1 },
   greeting: { color: colors.textSecondary, fontSize: 14 },
   userName: { color: colors.textPrimary, fontSize: 26, fontWeight: '700', letterSpacing: -0.5 },
   dateText: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
-  logoutBtn: { backgroundColor: colors.dangerBg, borderWidth: 1, borderColor: colors.danger, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  logoutText: { color: colors.danger, fontSize: 13, fontWeight: '700' },
-
+  bellBtn: { position: 'relative', padding: 8, marginTop: 4 },
+  bellIcon: { fontSize: 24 },
+  bellBadge: { position: 'absolute', top: 2, right: 2, backgroundColor: colors.danger, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: colors.bgHeader },
+  bellBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
   clockBanner: { marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1 },
   clockBannerIn: { backgroundColor: colors.primaryBg, borderColor: colors.primary },
   clockBannerOut: { backgroundColor: colors.dangerBg, borderColor: colors.danger },
@@ -300,7 +293,6 @@ const styles = StyleSheet.create({
   clockBannerStatus: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
   clockBannerSite: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
   clockBannerArrow: { color: colors.textMuted, fontSize: 28 },
-
   menuContainer: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 10 },
   menuCard: { width: '47%', backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border },
   menuIconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 10, borderWidth: 1, position: 'relative' },
@@ -309,10 +301,11 @@ const styles = StyleSheet.create({
   menuBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
   menuTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 3 },
   menuSubtitle: { color: colors.textSecondary, fontSize: 11 },
-
-  footer: { padding: 20, alignItems: 'center' },
+  footer: { padding: 20, alignItems: 'center', gap: 6 },
   footerText: { color: colors.textMuted, fontSize: 12 },
-  footerVersion: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  footerVersion: { color: colors.textMuted, fontSize: 11 },
+  logoutBtn: { marginTop: 8, backgroundColor: colors.dangerBg, borderWidth: 1, borderColor: colors.danger, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 12 },
+  logoutText: { color: colors.danger, fontSize: 14, fontWeight: '700' },
 });
 
 export default HomeScreen;

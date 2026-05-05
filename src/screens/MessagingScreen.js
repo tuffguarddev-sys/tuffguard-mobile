@@ -3,12 +3,14 @@ import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   RefreshControl, TextInput, ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMessagesFromAPI, getAllUsers } from '../services/api';
 import socketService from '../services/socketService';
 import { colors } from '../theme/colors';
 
 const MessagingScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
@@ -207,7 +209,7 @@ const MessagingScreen = ({ navigation }) => {
         keyExtractor={item => item.id}
         renderItem={renderUser}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.blue]} tintColor={colors.blue} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💬</Text>

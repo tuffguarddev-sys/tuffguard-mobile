@@ -3,12 +3,14 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   TextInput, RefreshControl, ActivityIndicator, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const AdminSites = () => {
+  const insets = useSafeAreaInsets();
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

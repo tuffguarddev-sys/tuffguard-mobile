@@ -9,6 +9,7 @@ import {
  Alert,
  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -47,6 +48,7 @@ const CreateSchedule = ({ navigation, route }) => {
  const editingSchedule = route.params?.schedule || null;
  const isEditing = !!editingSchedule;
 
+  const insets = useSafeAreaInsets();
  const [site, setSite] = useState(editingSchedule?.site || 'Select a site...');
  const [date, setDate] = useState(editingSchedule?.date ? new Date(editingSchedule.date) : new Date());
  const [startTime, setStartTime] = useState(
@@ -249,7 +251,7 @@ const CreateSchedule = ({ navigation, route }) => {
  };
 
  return (
- <ScrollView style={styles.container}>
+ <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
  <View style={styles.form}>
  <Text style={styles.headerTitle}>
  {isEditing ? ' Edit Schedule' : ' Create New Schedule'}

@@ -4,11 +4,13 @@ import {
   TextInput, RefreshControl, ActivityIndicator, Modal,
   ScrollView, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const AdminShiftReports = () => {
+  const insets = useSafeAreaInsets();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -144,7 +146,7 @@ const AdminShiftReports = () => {
                 </TouchableOpacity>
               </View>
 
-              <ScrollView contentContainerStyle={styles.modalBody}>
+              <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} contentContainerStyle={styles.modalBody}>
                 {/* Clock times */}
                 <View style={styles.timeRow}>
                   <View style={{ alignItems: 'center' }}>
