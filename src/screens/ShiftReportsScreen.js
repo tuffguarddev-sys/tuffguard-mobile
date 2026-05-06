@@ -167,7 +167,7 @@ const ShiftReportsScreen = () => {
  </TouchableOpacity>
  </View>
 
- <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.modalContent}>
+ <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + 16 }} style={styles.modalContent}>
  {selectedReport && (
  <>
  <View style={styles.detailSection}>

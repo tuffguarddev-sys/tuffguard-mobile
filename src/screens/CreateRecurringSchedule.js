@@ -258,7 +258,7 @@ const CreateRecurringSchedule = ({ navigation }) => {
  };
 
  return (
- <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }} style={styles.container}>
+ <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + 16 }} style={styles.container}>
  <View style={styles.form}>
  <Text style={styles.headerTitle}> Create Recurring Schedule</Text>
  <Text style={styles.subtitle}>

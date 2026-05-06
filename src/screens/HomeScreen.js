@@ -182,6 +182,15 @@ const HomeScreen = ({ navigation }) => {
       badge: null,
     },
     {
+      title: 'Shift Reports',
+      subtitle: 'View your end of shift reports',
+      icon: '📋',
+      screen: 'ShiftReports',
+      color: colors.primary,
+      bg: colors.primaryBg,
+      badge: null,
+    },
+    {
       title: 'My Profile',
       subtitle: 'Account settings',
       icon: '👤',
