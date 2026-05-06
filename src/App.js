@@ -39,6 +39,7 @@ import AdminSchedule from './src/screens/AdminSchedule';
 import AdminIncidents from './src/screens/AdminIncidents';
 import AdminShiftReports from './src/screens/AdminShiftReports';
 import AdminShiftHistory from './src/screens/AdminShiftHistory';
+import EventsScreen from './src/screens/EventsScreen';
 
 const Stack = createStackNavigator();
 
@@ -307,6 +308,7 @@ const App = () => {
         <Stack.Screen name="AdminIncidents" component={AdminIncidents} options={{ title: 'All Incidents', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminShiftReports" component={AdminShiftReports} options={{ title: 'Shift Reports', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminShiftHistory" component={AdminShiftHistory} options={{ title: 'Shift History', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'My Events', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

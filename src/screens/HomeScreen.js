@@ -173,6 +173,15 @@ const HomeScreen = ({ navigation }) => {
       badge: null,
     },
     {
+      title: 'Events',
+      subtitle: 'View your assigned events',
+      icon: '🎯',
+      screen: 'Events',
+      color: colors.blue,
+      bg: colors.blueBg,
+      badge: null,
+    },
+    {
       title: 'My Profile',
       subtitle: 'Account settings',
       icon: '👤',
