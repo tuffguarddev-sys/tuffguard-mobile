@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSchedules, apiRequest } from '../services/api';
+import socketService from '../services/socketService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme/colors';
 
@@ -51,6 +52,17 @@ const CalendarSchedule = ({ navigation }) => {
     loadSchedules();
     loadTimeOffRequests();
     loadEvents();
+    // Real-time updates
+    socketService.onScheduleUpdate(() => {
+      loadSchedules();
+    });
+    socketService.onEventUpdate(() => {
+      loadEvents();
+    });
+    return () => {
+      socketService.removeListener('schedule:update');
+      socketService.removeListener('event:update');
+    };
   }, []);
 
   const loadUser = async () => {

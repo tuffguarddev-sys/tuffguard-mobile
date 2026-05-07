@@ -182,6 +182,18 @@ class SocketService {
     this.listeners.set('location:guard', callback);
   }
 
+  onScheduleUpdate(callback) {
+    if (!this.socket) return;
+    this.socket.on('schedule:update', callback);
+    this.listeners.set('schedule:update', callback);
+  }
+
+  onEventUpdate(callback) {
+    if (!this.socket) return;
+    this.socket.on('event:update', callback);
+    this.listeners.set('event:update', callback);
+  }
+
   removeAllListeners() {
     if (!this.socket) return;
     this.listeners.forEach((callback, event) => {
