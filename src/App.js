@@ -40,6 +40,7 @@ import AdminIncidents from './src/screens/AdminIncidents';
 import AdminShiftReports from './src/screens/AdminShiftReports';
 import AdminShiftHistory from './src/screens/AdminShiftHistory';
 import EventsScreen from './src/screens/EventsScreen';
+import GateLogScreen from './src/screens/GateLogScreen';
 
 const Stack = createStackNavigator();
 
@@ -309,6 +310,7 @@ const App = () => {
         <Stack.Screen name="AdminShiftReports" component={AdminShiftReports} options={{ title: 'Shift Reports', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminShiftHistory" component={AdminShiftHistory} options={{ title: 'Shift History', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'My Events', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="GateLog" component={GateLogScreen} options={{ title: 'Gate Log', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

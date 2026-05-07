@@ -172,15 +172,7 @@ const HomeScreen = ({ navigation }) => {
       bg: colors.warningBg,
       badge: null,
     },
-    {
-      title: 'Events',
-      subtitle: 'View your assigned events',
-      icon: '🎯',
-      screen: 'Events',
-      color: colors.blue,
-      bg: colors.blueBg,
-      badge: null,
-    },
+
     {
       title: 'Shift Reports',
       subtitle: 'View your end of shift reports',
@@ -188,6 +180,15 @@ const HomeScreen = ({ navigation }) => {
       screen: 'ShiftReports',
       color: colors.primary,
       bg: colors.primaryBg,
+      badge: null,
+    },
+    {
+      title: 'Gate Log',
+      subtitle: 'Log site visitors and contractors',
+      icon: '🚧',
+      screen: 'GateLog',
+      color: colors.warning,
+      bg: colors.warningBg,
       badge: null,
     },
     {

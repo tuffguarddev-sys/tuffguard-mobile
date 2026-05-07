@@ -35,6 +35,8 @@ const CalendarSchedule = ({ navigation }) => {
   const [startDateObj, setStartDateObj] = useState(new Date());
   const [endDateObj, setEndDateObj] = useState(new Date());
   const [selectedShift, setSelectedShift] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   function getWeekStart(date) {
     const d = new Date(date);
@@ -48,6 +50,7 @@ const CalendarSchedule = ({ navigation }) => {
     loadUser();
     loadSchedules();
     loadTimeOffRequests();
+    loadEvents();
   }, []);
 
   const loadUser = async () => {
@@ -72,6 +75,12 @@ const CalendarSchedule = ({ navigation }) => {
     } catch (err) { console.error('Time off load error:', err); }
   };
 
+  const loadEvents = async () => {
+    try {
+      const data = await apiRequest('/events/my', 'GET');
+      setEvents(data.data || []);
+    } catch (err) { console.error('Events load error:', err); }
+  };
   const submitTimeOff = async () => {
     if (!timeOffForm.startDate || !timeOffForm.endDate) {
       Alert.alert('Required', 'Please select start and end dates.');
@@ -106,6 +115,10 @@ const CalendarSchedule = ({ navigation }) => {
     });
   };
 
+  const hasEvent = (date) => {
+    const dateStr = formatLocalDate(date);
+    return events.some(e => e.startDate <= dateStr && e.endDate >= dateStr);
+  };
   const hasShift = (date) => {
     const dateStr = formatLocalDate(date);
     return schedules.some(s => s.startTime && s.startTime.split('T')[0] === dateStr);
@@ -158,6 +171,7 @@ const CalendarSchedule = ({ navigation }) => {
                   {day.getDate()}
                 </Text>
                 {hasS && <View style={[styles.shiftDot, { backgroundColor: isSelected ? '#fff' : colors.primary }]} />}
+                {hasEvent(day) && <View style={[styles.shiftDot, { backgroundColor: isSelected ? '#fff' : colors.blue }]} />}
               </TouchableOpacity>
             );
           })}
@@ -194,6 +208,30 @@ const CalendarSchedule = ({ navigation }) => {
           )}
         </View>
 
+        {/* Events Section */}
+        {(() => {
+          const dayEvents = events.filter(e => e.startDate <= selectedDate && e.endDate >= selectedDate);
+          if (dayEvents.length === 0) return null;
+          return (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Events</Text>
+              {dayEvents.map(e => (
+                <TouchableOpacity key={e.id} style={[styles.shiftCard, { borderLeftColor: colors.blue }]} onPress={() => setSelectedEvent(e)} activeOpacity={0.7}>
+                  <View style={[styles.shiftCardLeft, { backgroundColor: colors.blue }]} />
+                  <View style={styles.shiftCardBody}>
+                    <Text style={styles.shiftSite}>{e.title}</Text>
+                    <Text style={[styles.shiftTime, { color: colors.blue }]}>
+                      {e.startTime ? e.startTime + (e.endTime ? ' - ' + e.endTime : '') : 'All day'}
+                    </Text>
+                    {e.site && <Text style={styles.shiftNotes}>{e.site.name}</Text>}
+                    {e.address && <Text style={styles.shiftNotes}>{e.address}</Text>}
+                  </View>
+                  <Text style={styles.shiftArrow}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          );
+        })()}
         {/* Time Off Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -258,6 +296,51 @@ const CalendarSchedule = ({ navigation }) => {
         </View>
       </Modal>
 
+      {/* Event Detail Modal */}
+      <Modal visible={!!selectedEvent} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHandle} />
+            {selectedEvent && (
+              <>
+                <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
+                <Text style={styles.modalDate}>
+                  {selectedEvent.startDate}{selectedEvent.startDate !== selectedEvent.endDate ? ' — ' + selectedEvent.endDate : ''}
+                </Text>
+                {selectedEvent.startTime && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Time</Text>
+                    <Text style={[styles.detailValue, { color: colors.blue }]}>
+                      {selectedEvent.startTime}{selectedEvent.endTime ? ' - ' + selectedEvent.endTime : ''}
+                    </Text>
+                  </View>
+                )}
+                {selectedEvent.site && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Site</Text>
+                    <Text style={styles.detailValue}>{selectedEvent.site.name}</Text>
+                  </View>
+                )}
+                {selectedEvent.address && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Address</Text>
+                    <Text style={styles.detailValue}>{selectedEvent.address}</Text>
+                  </View>
+                )}
+                {selectedEvent.notes && (
+                  <View style={styles.notesBox}>
+                    <Text style={styles.notesLabel}>Notes</Text>
+                    <Text style={styles.notesText}>{selectedEvent.notes}</Text>
+                  </View>
+                )}
+              </>
+            )}
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedEvent(null)}>
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {/* Time Off Modal */}
       <Modal visible={timeOffModal} transparent animationType="slide" onRequestClose={() => setTimeOffModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
