@@ -94,7 +94,7 @@ const AdminSites = () => {
       </View>
       <FlatList data={filtered} keyExtractor={s => s.id} renderItem={renderSite}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadSites(); }} colors={['#4CAF50']} />}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
         ListHeaderComponent={<Text style={styles.count}>{filtered.length} sites</Text>}
       />
     </View>

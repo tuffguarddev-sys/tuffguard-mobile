@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
  View, Text, TextInput, TouchableOpacity, StyleSheet,
  ScrollView, Alert, ActivityIndicator, Switch,
@@ -27,6 +28,7 @@ const Field = ({ label, required, children }) => (
 );
 
 const ReportIncident = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
  const [loading, setLoading] = useState(false);
  const [images, setImages] = useState([]);
  const [videos, setVideos] = useState([]);
@@ -193,7 +195,7 @@ Status: ${status.toUpperCase()}
  };
 
  return (
- <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+ <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">
  <View style={styles.header}>
  <Text style={styles.headerTitle}>Incident Report</Text>
  <Text style={styles.headerSub}>Complete all required fields marked with *</Text>

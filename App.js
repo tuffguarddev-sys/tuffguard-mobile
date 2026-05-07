@@ -41,6 +41,8 @@ import AdminTracking from './src/screens/AdminTracking';
 import ProfileScreen from './src/screens/ProfileScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import TimeOffScreen from './src/screens/TimeOffScreen';
+import EventsScreen from './src/screens/EventsScreen';
+import GateLogScreen from './src/screens/GateLogScreen';
 
 const Stack = createStackNavigator();
 
@@ -256,6 +258,8 @@ const App = () => {
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'My Profile', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="TimeOff" component={TimeOffScreen} options={{ title: 'Time Off Requests', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'My Events', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
+        <Stack.Screen name="GateLog" component={GateLogScreen} options={{ title: 'Gate Log', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
  </Stack.Navigator>
  </NavigationContainer>
  );

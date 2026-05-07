@@ -82,7 +82,7 @@ const AdminUsers = ({ navigation }) => {
       </View>
       <FlatList data={filtered} keyExtractor={u => u.id} renderItem={renderUser}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadUsers(); }} colors={['#2196F3']} />}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
         ListHeaderComponent={<Text style={styles.count}>{filtered.length} users</Text>}
       />
     </View>
