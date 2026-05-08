@@ -28,6 +28,7 @@ import ConversationScreen from './src/screens/ConversationScreen';
 import NewMessageScreen from './src/screens/NewMessageScreen';
 import ShiftReportsScreen from './src/screens/ShiftReportsScreen';
 import SitesScreen from './src/screens/SitesScreen';
+import BannedIndividualsScreen from './src/screens/BannedIndividualsScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import CheckInScreen from './src/screens/CheckInScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -253,6 +254,11 @@ const App = () => {
               fontWeight: 'bold',
             }
           }}
+        />
+        <Stack.Screen
+          name="BannedIndividuals"
+          component={BannedIndividualsScreen}
+          options={{ headerShown: false }}
         />
         <Stack.Screen 
           name="Admin" 

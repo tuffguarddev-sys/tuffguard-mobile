@@ -29,6 +29,7 @@ import ConversationScreen from './src/screens/ConversationScreen';
 import NewMessageScreen from './src/screens/NewMessageScreen';
 import ShiftReportsScreen from './src/screens/ShiftReportsScreen';
 import SitesScreen from './src/screens/SitesScreen';
+import BannedIndividualsScreen from './src/screens/BannedIndividualsScreen';
 import CheckInScreen from './src/screens/CheckInScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import AdminUsers from './src/screens/AdminUsers';
@@ -247,6 +248,7 @@ const App = () => {
  headerTitleStyle: { color: '#000000', fontWeight: 'bold' }
  }}
  />
+        <Stack.Screen name="BannedIndividuals" component={BannedIndividualsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Admin" component={AdminScreen} options={{ title: 'Admin Panel', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminUsers" component={AdminUsers} options={{ title: 'Users', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
         <Stack.Screen name="AdminIncidents" component={AdminIncidents} options={{ title: 'Incidents', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />

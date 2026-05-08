@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   Linking, Platform, ActivityIndicator, RefreshControl, TextInput,
@@ -11,6 +12,7 @@ const API = 'https://tuffguardsecurityms.com/api';
 
 const SitesScreen = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -146,6 +148,13 @@ const SitesScreen = () => {
                 </TouchableOpacity>
               )}
             </View>
+            {/* Banned Individuals Button */}
+            <TouchableOpacity
+              style={styles.bannedBtn}
+              onPress={() => navigation.navigate('BannedIndividuals', { siteId: item.id, siteName: item.name })}>
+              <Text style={styles.bannedBtnIcon}>🚫</Text>
+              <Text style={styles.bannedBtnText}>Banned Individuals</Text>
+            </TouchableOpacity>
           </View>
         )}
       </TouchableOpacity>
@@ -250,6 +259,9 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '600', marginBottom: 8 },
   emptyText: { color: colors.textSecondary, fontSize: 14 },
+  bannedBtn: { marginTop: 10, backgroundColor: '#1a0a0a', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#ff4444' },
+  bannedBtnIcon: { fontSize: 16 },
+  bannedBtnText: { color: '#ff4444', fontSize: 14, fontWeight: '700' },
 });
 
 export default SitesScreen;
