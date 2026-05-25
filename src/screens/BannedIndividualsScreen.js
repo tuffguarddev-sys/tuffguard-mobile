@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme/colors';
+import ImageViewing from 'react-native-image-viewing';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
@@ -21,9 +22,12 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
   const [userRole, setUserRole] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: '', banDate: '', reason: '', notes: '', photo: null });
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [form, setForm] = useState({ name: '', banDate: todayStr, reason: '', notes: '', photo: null });
   const [editingId, setEditingId] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [viewerImages, setViewerImages] = useState([]);
+  const [viewerVisible, setViewerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
@@ -64,10 +68,19 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
   };
 
   const submitBan = async () => {
-    if (!form.banDate || !form.reason) { Alert.alert('Required', 'Ban date and reason are required.'); return; }
+    console.log('🔵 submitBan called');
+    console.log('🔵 form state:', JSON.stringify({ name: form.name, banDate: form.banDate, reason: form.reason, notes: form.notes, hasPhoto: !!form.photo }));
+    if (!form.banDate || !form.reason) { 
+      console.log('🔴 Validation failed - banDate:', form.banDate, 'reason:', form.reason);
+      Alert.alert('Required', 'Ban date and reason are required.'); 
+      return; 
+    }
     setSubmitting(true);
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('🔵 Token retrieved:', token ? 'YES' : 'NO');
+      console.log('🔵 siteId:', siteId);
+      console.log('🔵 editingId:', editingId);
       const formData = new FormData();
       formData.append('siteId', siteId);
       formData.append('name', form.name);
@@ -75,28 +88,38 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
       formData.append('reason', form.reason);
       formData.append('notes', form.notes);
       if (form.photo) {
+        console.log('🔵 Adding photo:', form.photo.uri);
         formData.append('photo', {
           uri: form.photo.uri,
           type: 'image/jpeg',
           name: 'ban-photo.jpg'
         });
       }
-      const res = await fetch(editingId ? `${API}/banned/${editingId}` : `${API}/banned`, {
-        method: editingId ? 'PUT' : 'POST',
+      const url = editingId ? `${API}/banned/${editingId}` : `${API}/banned`;
+      const method = editingId ? 'PUT' : 'POST';
+      console.log('🔵 Sending', method, 'to', url);
+      const res = await fetch(url, {
+        method,
         headers: { Authorization: 'Bearer ' + token },
         body: formData
       });
+      console.log('🔵 Response status:', res.status);
       const data = await res.json();
+      console.log('🔵 Response data:', JSON.stringify(data));
       if (data.success) {
+        console.log('✅ Ban added successfully');
         setModalVisible(false);
         setEditingId(null);
-        setForm({ name: '', banDate: '', reason: '', notes: '', photo: null });
+        setForm({ name: '', banDate: new Date().toISOString().split('T')[0], reason: '', notes: '', photo: null });
         loadBanned();
       } else {
+        console.log('🔴 Server error:', data.error);
         Alert.alert('Error', data.error || 'Failed to add banned individual.');
       }
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong.');
+      console.error('🔴 submitBan catch error:', err.message);
+      console.error('🔴 Full error:', err);
+      Alert.alert('Error', 'Something went wrong: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -116,6 +139,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
   };
 
   const isAdmin = ['DEV', 'BOSS', 'MANAGER'].includes(userRole);
+  const canEdit = ['DEV', 'BOSS', 'MANAGER', 'EMPLOYEE'].includes(userRole);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -133,7 +157,9 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.caseBody}>
         {item.photo ? (
-          <Image source={{ uri: `https://tuffguardsecurityms.com${item.photo}` }} style={styles.photo} />
+          <TouchableOpacity onPress={() => { setViewerImages([{ uri: `https://tuffguardsecurityms.com${item.photo}` }]); setViewerVisible(true); }}>
+            <Image source={{ uri: `https://tuffguardsecurityms.com${item.photo}` }} style={styles.photo} />
+          </TouchableOpacity>
         ) : (
           <View style={styles.noPhoto}>
             <Text style={styles.noPhotoText}>NO{'\n'}PHOTO</Text>
@@ -151,7 +177,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
           <Text style={styles.notesText}>{item.notes}</Text>
         </View>
       ) : null}
-      {(isAdmin || userRole === 'CLIENT') && (
+      {canEdit && (
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.editBtn} onPress={() => {
             setEditingId(item.id);
@@ -161,9 +187,11 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
           }}>
             <Text style={styles.editBtnText}>✏️ Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.removeBtn} onPress={() => removeBan(item.id)}>
-            <Text style={styles.removeBtnText}>Remove</Text>
-          </TouchableOpacity>
+          {isAdmin && (
+            <TouchableOpacity style={styles.removeBtn} onPress={() => removeBan(item.id)}>
+              <Text style={styles.removeBtnText}>Remove</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>
@@ -187,7 +215,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
           <Text style={styles.headerSub}>{siteName}</Text>
         </View>
         {isAdmin && (
-          <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+          <TouchableOpacity style={styles.addBtn} onPress={() => { setForm({ name: '', banDate: new Date().toISOString().split('T')[0], reason: '', notes: '', photo: null }); setModalVisible(true); }}>
             <Text style={styles.addBtnText}>+ Add</Text>
           </TouchableOpacity>
         )}
@@ -277,7 +305,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
               </View>
               {form.photo && (
-                <Image source={{ uri: form.photo.uri }} style={styles.previewPhoto} />
+                <Image source={{ uri: form.photo.uri }} style={styles.previewPhoto} resizeMode='contain' />
               )}
 
               <View style={styles.modalBtns}>
@@ -292,6 +320,12 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
           </View>
         </View>
       </Modal>
+      <ImageViewing
+        images={viewerImages}
+        imageIndex={0}
+        visible={viewerVisible}
+        onRequestClose={() => setViewerVisible(false)}
+      />
     </View>
   );
 };
@@ -314,7 +348,7 @@ const styles = StyleSheet.create({
   caseNumberText: { color: '#ff4444', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   caseDate: { color: colors.textSecondary, fontSize: 11 },
   caseBody: { flexDirection: 'row', padding: 14, gap: 14 },
-  photo: { width: 80, height: 100, borderRadius: 8, backgroundColor: colors.bgInput },
+  photo: { width: 100, height: 130, borderRadius: 8, backgroundColor: colors.bgInput, resizeMode: 'cover' },
   noPhoto: { width: 80, height: 100, borderRadius: 8, backgroundColor: '#1a0a0a', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#ff444444' },
   noPhotoText: { color: '#ff4444', fontSize: 10, fontWeight: '700', textAlign: 'center', letterSpacing: 1 },
   caseDetails: { flex: 1 },
@@ -342,7 +376,7 @@ const styles = StyleSheet.create({
   photoRow: { flexDirection: 'row', gap: 10 },
   photoBtn: { flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, alignItems: 'center' },
   photoBtnText: { color: colors.textPrimary, fontSize: 14 },
-  previewPhoto: { width: '100%', height: 150, borderRadius: 10, marginTop: 10 },
+  previewPhoto: { width: '100%', height: 250, borderRadius: 10, marginTop: 10, resizeMode: 'contain' },
   modalBtns: { flexDirection: 'row', gap: 10, marginTop: 20 },
   cancelBtn: { flex: 1, backgroundColor: colors.bgInput, borderRadius: 10, padding: 14, alignItems: 'center' },
   cancelBtnText: { color: colors.textSecondary, fontSize: 15, fontWeight: '600' },

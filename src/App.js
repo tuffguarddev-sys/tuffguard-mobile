@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createStackNavigator } from '@react-navigation/stack';
 import socketService from './services/socketService';
 import { checkForUpdate, startPeriodicUpdateCheck, stopPeriodicUpdateCheck } from './services/updateService';
@@ -96,6 +97,7 @@ const App = () => {
   }
 
   return (
+    <SafeAreaProvider>
     <NavigationContainer>
       <StatusBar barStyle="light-content" backgroundColor="#888" />
       <Stack.Navigator
@@ -319,6 +321,7 @@ const App = () => {
         <Stack.Screen name="GateLog" component={GateLogScreen} options={{ title: 'Gate Log', headerTitleStyle: { color: '#000000', fontWeight: 'bold' } }} />
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 
