@@ -13,9 +13,11 @@ import {
  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { login } from '../services/api';
 
  const LoginScreen = ({ navigation, onLogin }) => {
+ const insets = useSafeAreaInsets();
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [loading, setLoading] = useState(false);
@@ -50,7 +52,7 @@ import { login } from '../services/api';
 
  return (
  <KeyboardAvoidingView 
- style={styles.container}
+ style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
  keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
  
