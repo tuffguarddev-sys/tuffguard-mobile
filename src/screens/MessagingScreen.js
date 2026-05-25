@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMessagesFromAPI, getAllUsers } from '../services/api';
 import socketService from '../services/socketService';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const MessagingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -189,7 +190,7 @@ const MessagingScreen = ({ navigation }) => {
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <MaterialIcons name='search' size={20} color={colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           value={search}
@@ -212,7 +213,7 @@ const MessagingScreen = ({ navigation }) => {
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>💬</Text>
+            <MaterialIcons name='chat' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No contacts found</Text>
             <Text style={styles.emptyText}>Try adjusting your search</Text>
           </View>

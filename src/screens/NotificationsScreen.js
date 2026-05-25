@@ -7,18 +7,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import socketService from '../services/socketService';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const typeConfig = {
-  message:        { icon: '💬', color: colors.blue,    bg: colors.blueBg,    label: 'Message' },
-  incident:       { icon: '⚠️', color: colors.danger,  bg: colors.dangerBg,  label: 'Incident' },
-  shift_report:   { icon: '📋', color: colors.primary, bg: colors.primaryBg, label: 'Shift Report' },
-  late_clockin:   { icon: '⏰', color: colors.warning, bg: colors.warningBg, label: 'Late Clock In' },
-  missed_clockin: { icon: '🚫', color: colors.danger,  bg: colors.dangerBg,  label: 'Missed Clock In' },
-  skipped_report: { icon: '📝', color: colors.warning, bg: colors.warningBg, label: 'Skipped Report' },
-  time_off:       { icon: '📅', color: colors.primary, bg: colors.primaryBg, label: 'Time Off' },
-  schedule:       { icon: '🗓️', color: colors.blue,    bg: colors.blueBg,    label: 'Schedule' },
+  message:        { icon: 'chat',            color: colors.blue,    bg: colors.blueBg,    label: 'Message' },
+  incident:       { icon: 'warning',         color: colors.danger,  bg: colors.dangerBg,  label: 'Incident' },
+  shift_report:   { icon: 'assignment',      color: colors.primary, bg: colors.primaryBg, label: 'Shift Report' },
+  late_clockin:   { icon: 'access-time',     color: colors.warning, bg: colors.warningBg, label: 'Late Clock In' },
+  missed_clockin: { icon: 'cancel',          color: colors.danger,  bg: colors.dangerBg,  label: 'Missed Clock In' },
+  skipped_report: { icon: 'edit-note',       color: colors.warning, bg: colors.warningBg, label: 'Skipped Report' },
+  time_off:       { icon: 'event',           color: colors.primary, bg: colors.primaryBg, label: 'Time Off' },
+  schedule:       { icon: 'calendar-today',  color: colors.blue,    bg: colors.blueBg,    label: 'Schedule' },
 };
 
 const NotificationsScreen = () => {
@@ -97,14 +98,14 @@ const NotificationsScreen = () => {
   const earlierNotifs = notifications.filter(n => !isToday(n.createdAt));
 
   const renderNotification = ({ item }) => {
-    const type = typeConfig[item.type] || { icon: '🔔', color: colors.textSecondary, bg: colors.bgInput, label: 'Notification' };
+    const type = typeConfig[item.type] || { icon: 'notifications', color: colors.textSecondary, bg: colors.bgInput, label: 'Notification' };
     return (
       <TouchableOpacity
         style={[styles.card, !item.isRead && styles.cardUnread]}
         onPress={() => { if (!item.isRead) markRead(item.id); }}
         activeOpacity={0.7}>
-        <View style={[styles.iconBox, { backgroundColor: type.bg, borderColor: type.color }]}>
-          <Text style={styles.iconText}>{type.icon}</Text>
+        <View style={[styles.iconBox, { backgroundColor: colors.bgInput, borderColor: colors.border }]}>
+          <MaterialIcons name={type.icon} size={22} color='#ffffff' />
         </View>
         <View style={styles.cardContent}>
           <View style={styles.cardTop}>
@@ -158,7 +159,7 @@ const NotificationsScreen = () => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🔔</Text>
+            <MaterialIcons name='notifications' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No notifications</Text>
             <Text style={styles.emptyText}>You're all caught up</Text>
           </View>

@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 import ImageViewing from 'react-native-image-viewing';
 
 const API = 'https://tuffguardsecurityms.com/api';
@@ -185,7 +186,8 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
             setForm({ name: item.name || '', banDate: item.banDate || '', reason: item.reason || '', notes: item.notes || '', photo: null });
             setModalVisible(true);
           }}>
-            <Text style={styles.editBtnText}>✏️ Edit</Text>
+            <MaterialIcons name='edit' size={16} color={colors.textPrimary} />
+            <Text style={styles.editBtnText}> Edit</Text>
           </TouchableOpacity>
           {isAdmin && (
             <TouchableOpacity style={styles.removeBtn} onPress={() => removeBan(item.id)}>
@@ -211,7 +213,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
           <Text style={styles.backBtnText}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>🚫 Banned Individuals</Text>
+          <Text style={styles.headerTitle}>Banned Individuals</Text>
           <Text style={styles.headerSub}>{siteName}</Text>
         </View>
         {isAdmin && (
@@ -229,7 +231,7 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadBanned(); }} colors={[colors.blue]} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>✅</Text>
+            <MaterialIcons name='check-circle' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No Banned Individuals</Text>
             <Text style={styles.emptyText}>This site has no banned individuals on record.</Text>
           </View>
@@ -298,10 +300,12 @@ const BannedIndividualsScreen = ({ route, navigation }) => {
               <Text style={styles.label}>Photo (optional)</Text>
               <View style={styles.photoRow}>
                 <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
-                  <Text style={styles.photoBtnText}>📁 Gallery</Text>
+                  <MaterialIcons name='photo-library' size={18} color={colors.textPrimary} />
+                  <Text style={styles.photoBtnText}> Gallery</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.photoBtn} onPress={takePhoto}>
-                  <Text style={styles.photoBtnText}>📷 Camera</Text>
+                  <MaterialIcons name='camera-alt' size={18} color={colors.textPrimary} />
+                  <Text style={styles.photoBtnText}> Camera</Text>
                 </TouchableOpacity>
               </View>
               {form.photo && (

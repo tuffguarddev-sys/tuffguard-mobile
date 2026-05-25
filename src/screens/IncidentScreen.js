@@ -6,14 +6,15 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const severityConfig = {
-  low:      { color: colors.primary,  bg: colors.primaryBg,  icon: '🟢', label: 'LOW' },
-  medium:   { color: colors.warning,  bg: colors.warningBg,  icon: '🟡', label: 'MEDIUM' },
-  high:     { color: colors.danger,   bg: colors.dangerBg,   icon: '🔴', label: 'HIGH' },
-  critical: { color: '#BF5AF2',       bg: '#1A0A2A',         icon: '🚨', label: 'CRITICAL' },
+  low:      { color: colors.primary,  bg: colors.primaryBg,  icon: 'check-circle',  label: 'LOW' },
+  medium:   { color: colors.warning,  bg: colors.warningBg,  icon: 'remove-circle', label: 'MEDIUM' },
+  high:     { color: colors.danger,   bg: colors.dangerBg,   icon: 'error',         label: 'HIGH' },
+  critical: { color: '#BF5AF2',       bg: '#1A0A2A',         icon: 'warning',       label: 'CRITICAL' },
 };
 
 const statusConfig = {
@@ -72,7 +73,7 @@ const IncidentScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.card} onPress={() => setSelected(item)} activeOpacity={0.7}>
         <View style={styles.cardHeader}>
           <View style={[styles.sevPill, { backgroundColor: sev.bg, borderColor: sev.color }]}>
-            <Text style={styles.sevIcon}>{sev.icon}</Text>
+            <MaterialIcons name={sev.icon} size={12} color={sev.color} />
             <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
           </View>
           <Text style={[styles.statText, { color: stat.color }]}>● {stat.label}</Text>
@@ -82,10 +83,10 @@ const IncidentScreen = ({ navigation }) => {
 
         <View style={styles.cardFooter}>
           <Text style={styles.cardDate}>
-            🕐 {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </Text>
-          {item.site?.name && <Text style={styles.cardSite}>📍 {item.site.name}</Text>}
-          {photoCount > 0 && <Text style={styles.photoCount}>📷 {photoCount}</Text>}
+          {item.site?.name && <Text style={styles.cardSite}>{item.site.name}</Text>}
+          {photoCount > 0 && <Text style={styles.photoCount}>{photoCount} photos</Text>}
         </View>
 
         {item.description && (
@@ -165,7 +166,7 @@ const IncidentScreen = ({ navigation }) => {
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🛡️</Text>
+            <MaterialIcons name='security' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No incidents found</Text>
             <Text style={styles.emptyText}>All clear — no incidents match your filters</Text>
           </View>
@@ -195,7 +196,7 @@ const IncidentScreen = ({ navigation }) => {
                   </Text>
                   {selected.site?.name && (
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>📍 Location</Text>
+                      <Text style={styles.detailLabel}>Location</Text>
                       <Text style={styles.detailValue}>{selected.site.name}</Text>
                     </View>
                   )}

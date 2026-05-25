@@ -7,6 +7,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
@@ -79,11 +80,11 @@ const SitesScreen = () => {
         {/* Card Header */}
         <View style={styles.cardHeader}>
           <View style={styles.siteIconBox}>
-            <Text style={styles.siteIconText}>🏢</Text>
+            <MaterialIcons name='business' size={22} color='#ffffff' />
           </View>
           <View style={styles.cardHeaderText}>
             <Text style={styles.siteName}>{item.name}</Text>
-            {item.city && <Text style={styles.siteCity}>📍 {item.city}{item.state ? ', ' + item.state : ''}</Text>}
+            {item.city && <Text style={styles.siteCity}>{item.city}{item.state ? ', ' + item.state : ''}</Text>}
           </View>
           <Text style={styles.expandArrow}>{isExpanded ? '▲' : '▼'}</Text>
         </View>
@@ -92,12 +93,12 @@ const SitesScreen = () => {
         <View style={styles.quickInfo}>
           {item.checkInInterval && (
             <View style={styles.quickBadge}>
-              <Text style={styles.quickBadgeText}>⏱ Check-in every {item.checkInInterval}m</Text>
+              <Text style={styles.quickBadgeText}>Check-in every {item.checkInInterval}m</Text>
             </View>
           )}
           {item.guardCount > 0 && (
             <View style={styles.quickBadge}>
-              <Text style={styles.quickBadgeText}>👮 {item.guardCount} guard{item.guardCount !== 1 ? 's' : ''}</Text>
+              <Text style={styles.quickBadgeText}>{item.guardCount} guard{item.guardCount !== 1 ? 's' : ''}</Text>
             </View>
           )}
         </View>
@@ -138,12 +139,12 @@ const SitesScreen = () => {
             {/* Action Buttons */}
             <View style={styles.btnRow}>
               <TouchableOpacity style={styles.dirBtn} onPress={() => openMaps(item)}>
-                <Text style={styles.dirBtnIcon}>🗺️</Text>
+                <MaterialIcons name='directions' size={18} color='#fff' />
                 <Text style={styles.dirBtnText}>Directions</Text>
               </TouchableOpacity>
               {isAdmin && item.contactPhone && (
                 <TouchableOpacity style={styles.callBtn} onPress={() => callContact(item.contactPhone)}>
-                  <Text style={styles.callBtnIcon}>📞</Text>
+                  <MaterialIcons name='phone' size={18} color={colors.blue} />
                   <Text style={styles.callBtnText}>{item.contactPhone}</Text>
                 </TouchableOpacity>
               )}
@@ -152,7 +153,7 @@ const SitesScreen = () => {
             <TouchableOpacity
               style={styles.bannedBtn}
               onPress={() => navigation.navigate('BannedIndividuals', { siteId: item.id, siteName: item.name })}>
-              <Text style={styles.bannedBtnIcon}>🚫</Text>
+              <MaterialIcons name='block' size={18} color='#ff4444' />
               <Text style={styles.bannedBtnText}>Banned Individuals</Text>
             </TouchableOpacity>
           </View>
@@ -177,7 +178,7 @@ const SitesScreen = () => {
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <MaterialIcons name='search' size={20} color={colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           value={search}
@@ -200,7 +201,7 @@ const SitesScreen = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.blue]} tintColor={colors.blue} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🏢</Text>
+            <MaterialIcons name='business' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No sites found</Text>
             <Text style={styles.emptyText}>Try adjusting your search</Text>
           </View>

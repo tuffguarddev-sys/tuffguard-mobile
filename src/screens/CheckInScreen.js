@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
@@ -64,7 +65,7 @@ const CheckInScreen = ({ navigation }) => {
         body: JSON.stringify({ shiftId: activeShift.id, siteId: activeShift.siteId, notes: notes.trim() || null })
       });
       if (!res.ok) throw new Error('Failed to check in');
-      Alert.alert('✅ Check-In Recorded', `Time: ${new Date().toLocaleTimeString()}${notes.trim() ? '\n📝 ' + notes.trim() : ''}`);
+      Alert.alert('Check-In Recorded', `Time: ${new Date().toLocaleTimeString()}${notes.trim() ? '\n' + notes.trim() : ''}`);
       setNotes('');
       setShowModal(false);
       loadData();
@@ -113,7 +114,7 @@ const CheckInScreen = ({ navigation }) => {
         {/* Status Card */}
         {!activeShift ? (
           <View style={styles.noShiftCard}>
-            <Text style={styles.noShiftIcon}>🔒</Text>
+            <MaterialIcons name='lock' size={40} color={colors.textMuted} />
             <Text style={styles.noShiftTitle}>Not Clocked In</Text>
             <Text style={styles.noShiftText}>Clock in to start recording check-ins</Text>
           </View>
@@ -122,15 +123,15 @@ const CheckInScreen = ({ navigation }) => {
             {/* Interval Info */}
             <View style={styles.infoCard}>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>📍 Site</Text>
+                <Text style={styles.infoLabel}>Site</Text>
                 <Text style={styles.infoValue}>{activeShift.siteName || 'Unknown'}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>⏱ Required Every</Text>
+                <Text style={styles.infoLabel}>Required Every</Text>
                 <Text style={styles.infoValue}>{checkInInterval} minutes</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>✅ Total Check-ins</Text>
+                <Text style={styles.infoLabel}>Total Check-ins</Text>
                 <Text style={styles.infoValue}>{checkIns.length} this shift</Text>
               </View>
             </View>
@@ -139,7 +140,7 @@ const CheckInScreen = ({ navigation }) => {
             {countdown ? (
               <View style={[styles.countdownCard, isOverdue && styles.countdownCardOverdue]}>
                 <Text style={styles.countdownLabel}>
-                  {isOverdue ? '⚠️ CHECK-IN OVERDUE' : 'NEXT CHECK-IN IN'}
+                  {isOverdue ? 'CHECK-IN OVERDUE' : 'NEXT CHECK-IN IN'}
                 </Text>
                 <Text style={[styles.countdownValue, isOverdue && styles.countdownValueOverdue]}>
                   {countdown.text}
@@ -164,7 +165,7 @@ const CheckInScreen = ({ navigation }) => {
           style={[styles.checkInBtn, !activeShift && styles.btnDisabled]}
           onPress={() => setShowModal(true)}
           disabled={!activeShift}>
-          <Text style={styles.checkInBtnIcon}>✅</Text>
+          <MaterialIcons name='check-circle' size={28} color='#fff' />
           <View>
             <Text style={styles.checkInBtnText}>Check In Now</Text>
             <Text style={styles.checkInBtnSub}>{now.toLocaleTimeString()}</Text>
@@ -188,7 +189,7 @@ const CheckInScreen = ({ navigation }) => {
                 <Text style={styles.historyDate}>
                   {new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Text>
-                {item.notes && <Text style={styles.historyNotes}>📝 {item.notes}</Text>}
+                {item.notes && <Text style={styles.historyNotes}>{item.notes}</Text>}
               </View>
             </View>
           ))

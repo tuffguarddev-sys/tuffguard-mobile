@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 const APP_VERSION = '1.0.1';
@@ -77,7 +78,7 @@ const ProfileScreen = ({ navigation }) => {
       });
       const data = await res.json();
       if (res.ok) {
-        Alert.alert('✅ Success', 'Password changed successfully');
+        Alert.alert('Success', 'Password changed successfully');
         setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
         setShowPassSection(false);
       } else {
@@ -121,10 +122,10 @@ const ProfileScreen = ({ navigation }) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ACCOUNT INFO</Text>
         <View style={styles.infoCard}>
-          <InfoRow icon="✉️" label="Email" value={user?.email} />
-          {user?.phone && <InfoRow icon="📞" label="Phone" value={user.phone} />}
-          {site && <InfoRow icon="🏢" label="Site" value={site.name} />}
-          {user?.hourlyRate && <InfoRow icon="💵" label="Hourly Rate" value={`$${parseFloat(user.hourlyRate).toFixed(2)}/hr`} />}
+          <InfoRow icon="email" label="Email" value={user?.email} />
+          {user?.phone && <InfoRow icon="phone" label="Phone" value={user.phone} />}
+          {site && <InfoRow icon="business" label="Site" value={site.name} />}
+          {user?.hourlyRate && <InfoRow icon="attach-money" label="Hourly Rate" value={`$${parseFloat(user.hourlyRate).toFixed(2)}/hr`} />}
         </View>
       </View>
 
@@ -134,7 +135,7 @@ const ProfileScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.sectionCard}
           onPress={() => setShowPassSection(!showPassSection)}>
-          <Text style={styles.sectionCardIcon}>🔐</Text>
+          <MaterialIcons name='lock' size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
           <Text style={styles.sectionCardText}>Change Password</Text>
           <Text style={styles.sectionCardArrow}>{showPassSection ? '▲' : '▼'}</Text>
         </TouchableOpacity>
@@ -176,14 +177,14 @@ const ProfileScreen = ({ navigation }) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>APP INFO</Text>
         <View style={styles.infoCard}>
-          <InfoRow icon="📱" label="App Version" value={APP_VERSION} />
-          {appVersion && <InfoRow icon="☁️" label="Latest Version" value={appVersion.version} />}
+          <InfoRow icon="smartphone" label="App Version" value={APP_VERSION} />
+          {appVersion && <InfoRow icon="cloud" label="Latest Version" value={appVersion.version} />}
         </View>
       </View>
 
       {/* Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-        <Text style={styles.logoutIcon}>🚪</Text>
+        <MaterialIcons name='logout' size={20} color={colors.danger} />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
 
@@ -195,7 +196,7 @@ const ProfileScreen = ({ navigation }) => {
 
 const InfoRow = ({ icon, label, value }) => (
   <View style={styles.infoRow}>
-    <Text style={styles.infoIcon}>{icon}</Text>
+    <MaterialIcons name={icon} size={18} color={colors.textSecondary} style={{ marginRight: 12 }} />
     <Text style={styles.infoLabel}>{label}</Text>
     <Text style={styles.infoValue} numberOfLines={1}>{value || '—'}</Text>
   </View>

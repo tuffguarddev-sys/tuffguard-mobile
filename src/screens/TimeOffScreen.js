@@ -6,13 +6,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
 const statusConfig = {
-  pending:  { color: colors.warning, bg: colors.warningBg, icon: '⏳', label: 'PENDING' },
-  approved: { color: colors.primary, bg: colors.primaryBg, icon: '✅', label: 'APPROVED' },
-  denied:   { color: colors.danger,  bg: colors.dangerBg,  icon: '❌', label: 'DENIED' },
+  pending:  { color: colors.warning, bg: colors.warningBg, icon: 'schedule',     label: 'PENDING' },
+  approved: { color: colors.primary, bg: colors.primaryBg, icon: 'check-circle', label: 'APPROVED' },
+  denied:   { color: colors.danger,  bg: colors.dangerBg,  icon: 'cancel',       label: 'DENIED' },
 };
 
 const TimeOffScreen = () => {
@@ -63,7 +64,7 @@ const TimeOffScreen = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        Alert.alert('✅ Request Submitted', 'Your time off request has been submitted for approval.');
+        Alert.alert('Request Submitted', 'Your time off request has been submitted for approval.');
         setShowModal(false); setStartDate(''); setEndDate(''); setReason('');
         load();
       } else {
@@ -135,7 +136,7 @@ const TimeOffScreen = () => {
 
       {/* Request Button */}
       <TouchableOpacity style={styles.requestBtn} onPress={() => setShowModal(true)}>
-        <Text style={styles.requestBtnIcon}>📅</Text>
+        <MaterialIcons name='event' size={20} color='#fff' />
         <Text style={styles.requestBtnText}>Request Time Off</Text>
       </TouchableOpacity>
 
@@ -146,7 +147,7 @@ const TimeOffScreen = () => {
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🏖️</Text>
+            <MaterialIcons name='beach-access' size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>No requests yet</Text>
             <Text style={styles.emptyText}>Submit a time off request and it will appear here</Text>
           </View>
@@ -158,7 +159,7 @@ const TimeOffScreen = () => {
             <View style={[styles.card, { borderLeftColor: stat.color }]}>
               <View style={styles.cardTop}>
                 <View style={[styles.statusPill, { backgroundColor: stat.bg, borderColor: stat.color }]}>
-                  <Text style={styles.statusIcon}>{stat.icon}</Text>
+                  <MaterialIcons name={stat.icon} size={12} color={stat.color} />
                   <Text style={[styles.statusText, { color: stat.color }]}>{stat.label}</Text>
                 </View>
                 <Text style={styles.daysCount}>{days} day{days !== 1 ? 's' : ''}</Text>
@@ -166,7 +167,7 @@ const TimeOffScreen = () => {
               <Text style={styles.dateRange}>
                 {new Date(item.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — {new Date(item.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </Text>
-              {item.reason ? <Text style={styles.reason}>📝 {item.reason}</Text> : null}
+              {item.reason ? <Text style={styles.reason}>{item.reason}</Text> : null}
               {item.adminNote ? (
                 <View style={styles.adminNoteBox}>
                   <Text style={styles.adminNoteLabel}>Manager Note</Text>
@@ -214,7 +215,7 @@ const TimeOffScreen = () => {
             />
             {startDate && endDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate) && /^\d{4}-\d{2}-\d{2}$/.test(endDate) && (
               <Text style={styles.dayPreview}>
-                📅 {getDays(startDate, endDate)} day{getDays(startDate, endDate) !== 1 ? 's' : ''} requested
+                {getDays(startDate, endDate)} day{getDays(startDate, endDate) !== 1 ? 's' : ''} requested
               </Text>
             )}
             <Text style={styles.inputLabel}>Reason (Optional)</Text>

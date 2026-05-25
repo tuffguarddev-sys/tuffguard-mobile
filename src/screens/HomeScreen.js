@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logout, getUnreadCountAPI } from '../services/api';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const HomeScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -112,7 +113,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Check In',
       subtitle: 'Record your patrol check-in',
-      icon: '✅',
+      icon: 'check-circle',
       screen: 'CheckIn',
       color: colors.blue,
       bg: colors.blueBg,
@@ -121,7 +122,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Schedule',
       subtitle: 'View your upcoming shifts',
-      icon: '🗓️',
+      icon: 'calendar-today',
       screen: 'CalendarSchedule',
       color: colors.warning,
       bg: colors.warningBg,
@@ -130,7 +131,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Shift History',
       subtitle: 'View your past shifts',
-      icon: '📊',
+      icon: 'history',
       screen: 'ShiftHistory',
       color: colors.blue,
       bg: colors.blueBg,
@@ -139,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Incident Reports',
       subtitle: 'Report and view incidents',
-      icon: '🚨',
+      icon: 'warning',
       screen: 'Incidents',
       color: colors.danger,
       bg: colors.dangerBg,
@@ -148,7 +149,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Messages',
       subtitle: unreadMessages > 0 ? unreadMessages + ' unread message' + (unreadMessages !== 1 ? 's' : '') : 'Team communication',
-      icon: '💬',
+      icon: 'chat',
       screen: 'Messaging',
       color: colors.blue,
       bg: colors.blueBg,
@@ -157,7 +158,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Sites',
       subtitle: 'Locations and directions',
-      icon: '🏢',
+      icon: 'business',
       screen: 'Sites',
       color: colors.primary,
       bg: colors.primaryBg,
@@ -166,7 +167,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Time Off',
       subtitle: 'Request time off',
-      icon: '📅',
+      icon: 'event',
       screen: 'TimeOff',
       color: colors.warning,
       bg: colors.warningBg,
@@ -176,7 +177,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Shift Reports',
       subtitle: 'View your end of shift reports',
-      icon: '📋',
+      icon: 'assignment',
       screen: 'ShiftReports',
       color: colors.primary,
       bg: colors.primaryBg,
@@ -185,7 +186,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'Gate Log',
       subtitle: 'Log site visitors and contractors',
-      icon: '🚧',
+      icon: 'sensor-door',
       screen: 'GateLog',
       color: colors.warning,
       bg: colors.warningBg,
@@ -194,7 +195,7 @@ const HomeScreen = ({ navigation }) => {
     {
       title: 'My Profile',
       subtitle: 'Account settings',
-      icon: '👤',
+      icon: 'person',
       screen: 'Profile',
       color: colors.textSecondary,
       bg: colors.bgInput,
@@ -206,7 +207,7 @@ const HomeScreen = ({ navigation }) => {
     menuItems.push({
       title: 'Admin Panel',
       subtitle: 'Manage users, sites & reports',
-      icon: '⚙️',
+      icon: 'admin-panel-settings',
       screen: 'Admin',
       color: colors.purple,
       bg: '#1A0A2A',
@@ -230,7 +231,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
           {/* Notification Bell */}
           <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
-            <Text style={styles.bellIcon}>🔔</Text>
+            <MaterialIcons name='notifications' size={26} color='#ffffff' />
             {unreadNotifs > 0 && (
               <View style={styles.bellBadge}>
                 <Text style={styles.bellBadgeText}>{unreadNotifs > 9 ? '9+' : unreadNotifs}</Text>
@@ -250,7 +251,7 @@ const HomeScreen = ({ navigation }) => {
                 {clockedIn ? 'CLOCKED IN' : 'CLOCKED OUT'}
               </Text>
               <Text style={styles.clockBannerSite}>
-                {clockedIn ? '📍 ' + shiftSite : 'Tap to clock in'}
+                {clockedIn ? shiftSite : 'Tap to clock in'}
               </Text>
             </View>
           </View>
@@ -265,8 +266,8 @@ const HomeScreen = ({ navigation }) => {
               style={styles.menuCard}
               onPress={() => navigation.navigate(item.screen)}
               activeOpacity={0.7}>
-              <View style={[styles.menuIconBox, { backgroundColor: item.bg, borderColor: item.color }]}>
-                <Text style={styles.menuIcon}>{item.icon}</Text>
+              <View style={[styles.menuIconBox, { backgroundColor: colors.bgInput, borderColor: colors.border }]}>
+                <MaterialIcons name={item.icon} size={24} color='#ffffff' />
                 {item.badge > 0 && (
                   <View style={styles.menuBadge}>
                     <Text style={styles.menuBadgeText}>{item.badge > 9 ? '9+' : item.badge}</Text>

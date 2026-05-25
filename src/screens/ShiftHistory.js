@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const API = 'https://tuffguardsecurityms.com/api';
 
@@ -116,7 +117,7 @@ const ShiftHistory = () => {
         </View>
         {item.site?.address && (
           <Text style={styles.address} numberOfLines={1}>
-            📍 {[item.site.address, item.site.city].filter(Boolean).join(', ')}
+            {[item.site.address, item.site.city].filter(Boolean).join(', ')}
           </Text>
         )}
       </TouchableOpacity>
@@ -164,7 +165,7 @@ const ShiftHistory = () => {
 
       {shifts.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📋</Text>
+          <MaterialIcons name='assignment' size={48} color={colors.textMuted} />
           <Text style={styles.emptyTitle}>No shifts yet</Text>
           <Text style={styles.emptyText}>Your completed shifts will appear here</Text>
         </View>
@@ -196,20 +197,20 @@ const ShiftHistory = () => {
                     <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>⏰ Clock In</Text>
+                    <Text style={styles.detailLabel}>Clock In</Text>
                     <Text style={styles.detailValue}>{new Date(selected.clockInTime).toLocaleTimeString()}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>🔴 Clock Out</Text>
+                    <Text style={styles.detailLabel}>Clock Out</Text>
                     <Text style={styles.detailValue}>{selected.clockOutTime ? new Date(selected.clockOutTime).toLocaleTimeString() : 'Still active'}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>⏱ Duration</Text>
-                    <Text style={[styles.detailValue, dur.isOT && { color: colors.warning }]}>{dur.text} {dur.isOT ? '⚠️ OT' : ''}</Text>
+                    <Text style={styles.detailLabel}>Duration</Text>
+                    <Text style={[styles.detailValue, dur.isOT && { color: colors.warning }]}>{dur.text} {dur.isOT ? 'OT' : ''}</Text>
                   </View>
                   {selected.site && (
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>📍 Location</Text>
+                      <Text style={styles.detailLabel}>Location</Text>
                       <Text style={styles.detailValue}>{[selected.site.address, selected.site.city, selected.site.state].filter(Boolean).join(', ')}</Text>
                     </View>
                   )}
