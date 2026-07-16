@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:926506028663:android:a52dae3e064ec3ff888072",
         "android_client_info": {
-          "package_name": "com.tuffguarddev.SecurityAppTest"
+          "package_name": "com.tuffguard.security"
         }
       },
       "oauth_client": [],
